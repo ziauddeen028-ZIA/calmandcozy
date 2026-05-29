@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_ecommerce_variants",
+  "info": {
+    "displayName": "Variant",
+    "icon": "layer",
+    "description": "Product variant"
+  },
+  "options": {},
+  "attributes": {
+    "size": {
+      "type": "string"
+    },
+    "color": {
+      "type": "string"
+    },
+    "stock": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "price": {
+      "type": "decimal"
+    }
+  }
+}

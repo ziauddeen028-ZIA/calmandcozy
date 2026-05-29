@@ -8,10 +8,13 @@ export default function ProductCard({ product }) {
   const { documentId, title, sellingPrice, actualPrice, category, images } = product;
   
   // Use the first image if available, otherwise a placeholder
-  const imageUrl = images?.length > 0 
-    ? `${STRAPI_URL}${images[0].url}` 
-    : 'https://via.placeholder.com/400x400?text=No+Image';
-    
+  const getImageUrl = (img) => {
+    if (!img) return 'https://via.placeholder.com/400x400?text=No+Image';
+    if (img.url.startsWith('http')) return img.url;
+    return (import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337') + img.url;
+  };
+  
+  const imageUrl = images?.length > 0 ? getImageUrl(images[0]) : 'https://via.placeholder.com/400x400?text=No+Image';
   return (
     <motion.div 
       whileHover={{ y: -5 }}
@@ -39,30 +42,30 @@ export default function ProductCard({ product }) {
       </Link>
       
       <div className="p-5 flex flex-col flex-grow">
-        <div className="text-xs text-indigo-600 font-semibold uppercase tracking-wider mb-1">
+        <div className="text-xs text-blue-600 font-semibold uppercase tracking-wider mb-1">
           {category?.name || 'Uncategorized'}
         </div>
         
         <Link to={`/product/${documentId}`} className="flex-grow">
-          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 hover:text-indigo-600 transition-colors">
+          <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
             {title}
           </h3>
         </Link>
         
         <div className="flex items-center gap-2 mb-4 mt-auto">
           <span className="text-xl font-bold text-gray-900">
-            ${sellingPrice}
+            ₹{sellingPrice}
           </span>
           {actualPrice && actualPrice > sellingPrice && (
             <span className="text-sm text-gray-400 line-through">
-              ${actualPrice}
+              ₹{actualPrice}
             </span>
           )}
         </div>
         
         <motion.button 
           whileTap={{ scale: 0.95 }}
-          className="w-full py-2.5 px-4 bg-gray-900 hover:bg-indigo-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+          className="w-full py-2.5 px-4 bg-gray-900 hover:bg-blue-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
           onClick={() => {
             // Add to cart logic will go here
             console.log('Added to cart:', title);

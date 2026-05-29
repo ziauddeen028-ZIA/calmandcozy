@@ -112,13 +112,13 @@ export default function ProductDetails() {
           </div>
 
           <div className="flex items-end gap-4 mb-6">
-            <span className="text-4xl font-bold text-gray-900">${sellingPrice}</span>
+            <span className="text-4xl font-bold text-gray-900">₹{sellingPrice}</span>
             {actualPrice && actualPrice > sellingPrice && (
-              <span className="text-xl text-gray-400 line-through mb-1">${actualPrice}</span>
+              <span className="text-xl text-gray-400 line-through mb-1">₹{actualPrice}</span>
             )}
             {actualPrice && actualPrice > sellingPrice && (
               <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-md mb-1 ml-2">
-                Save ${actualPrice - sellingPrice}
+                Save ₹{actualPrice - sellingPrice}
               </span>
             )}
           </div>

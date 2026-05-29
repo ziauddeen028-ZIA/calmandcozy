@@ -1,0 +1,74 @@
+{
+  "kind": "collectionType",
+  "collectionName": "orders",
+  "info": {
+    "singularName": "order",
+    "pluralName": "orders",
+    "displayName": "Order",
+    "description": "Production-ready ecommerce order management"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "orderId": {
+      "type": "uid",
+      "required": true,
+      "unique": true
+    },
+    "userName": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "phone": {
+      "type": "string",
+      "required": true
+    },
+    "products": {
+      "type": "json",
+      "required": true
+    },
+    "total": {
+      "type": "decimal",
+      "required": true
+    },
+    "paymentStatus": {
+      "type": "enumeration",
+      "enum": ["pending", "paid", "failed", "refunded"],
+      "default": "pending",
+      "required": true
+    },
+    "orderStatus": {
+      "type": "enumeration",
+      "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"],
+      "default": "pending",
+      "required": true
+    },
+    "shippingAddress": {
+      "type": "json",
+      "required": true
+    },
+    "customizationData": {
+      "type": "json"
+    },
+    "paymentMethod": {
+      "type": "string"
+    },
+    "transactionId": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "text"
+    },
+    "stockDeducted": {
+      "type": "boolean",
+      "default": false,
+      "private": true
+    }
+  }
+}
