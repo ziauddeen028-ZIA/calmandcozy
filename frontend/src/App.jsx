@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { WishlistProvider } from './context/WishlistContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthLayout from './components/AuthLayout';
 import MainLayout from './layouts/MainLayout';
@@ -21,8 +22,9 @@ import ScrollToTop from "./components/ScrollToTop";
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <ScrollToTop />
+      <WishlistProvider>
+        <BrowserRouter>
+          <ScrollToTop />
         <Toaster position="top-center" />
         <Routes>
           {/* Main Layout routes */}
@@ -48,7 +50,8 @@ function App() {
             <Route path="reset-password" element={<ResetPassword />} />
           </Route>
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </WishlistProvider>
     </AuthProvider>
   );
 }

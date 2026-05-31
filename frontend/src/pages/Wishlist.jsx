@@ -1,15 +1,95 @@
-import { motion } from 'framer-motion';
+import React from "react";
+import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
+import { FiShoppingCart, FiTrash2 } from 'react-icons/fi';
+import { useWishlist } from "../context/WishlistContext";
 
-export default function Wishlist() {
+const Wishlist = () => {
+  const { wishlist, loading, removeFromWishlist } = useWishlist();
+
+  const handleAddToCart = async (product, wishlistDocumentId) => {
+    // Add to cart logic will go here
+    console.log('Added to cart:', product.title);
+    toast.success('Added to Cart 🛒', { duration: 1500 });
+    // Optionally remove from wishlist after adding to cart
+    // await removeFromWishlist(wishlistDocumentId);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-brand-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
-    >
-      <h1 className="text-3xl font-bold text-gray-900">Wishlist</h1>
-      <p className="mt-4 text-gray-600">This is the Wishlist page content.</p>
-    </motion.div>
+    <div className="container mx-auto max-w-6xl px-4 py-8">
+      <h1 className="mb-8 text-3xl font-bold">
+        My Wishlist
+      </h1>
+
+      {wishlist.length === 0 ? (
+        <div className="rounded-xl border p-10 text-center">
+          <p>Your wishlist is empty</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {wishlist.map((item) => {
+            const product = item.product;
+            const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337';
+            const imageUrl = product?.images?.[0]?.url 
+              ? `${STRAPI_URL}${product.images[0].url}` 
+              : "https://via.placeholder.com/300";
+
+            return (
+              <div
+                key={item.documentId}
+                className="overflow-hidden rounded-xl border bg-white shadow-sm"
+              >
+                <img
+                  src={imageUrl}
+                  alt={product?.title}
+                  className="h-64 w-full object-cover"
+                />
+
+                <div className="p-4 flex flex-col flex-grow">
+                  <Link to={`/product/${product.documentId}`}>
+                    <h3 className="line-clamp-2 text-lg font-semibold hover:text-brand-600 transition-colors">
+                      {product?.title}
+                    </h3>
+                  </Link>
+
+                  <div className="mt-2 mb-4 flex items-center justify-between">
+                    <span className="text-xl font-bold text-gray-900">
+                      ₹{product?.sellingPrice || product?.price}
+                    </span>
+                  </div>
+
+                  <div className="mt-auto grid grid-cols-4 gap-2">
+                    <button
+                      onClick={() => handleAddToCart(product, item.documentId)}
+                      className="col-span-3 flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-white font-medium hover:bg-brand-600 transition-colors"
+                    >
+                      <FiShoppingCart className="w-4 h-4" />
+                      Add to Cart
+                    </button>
+                    <button
+                      onClick={() => removeFromWishlist(item.documentId)}
+                      className="col-span-1 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-red-500 hover:bg-red-50 transition-colors"
+                      title="Remove from Wishlist"
+                    >
+                      <FiTrash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
-}
+};
+
+export default Wishlist;

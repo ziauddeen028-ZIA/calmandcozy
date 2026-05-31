@@ -13,6 +13,7 @@ import {
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../hooks/useAuth";
+import { useWishlist } from "../context/WishlistContext";
 
 function AvatarCircle({ letter, size = 'md' }) {
   const sizeClasses = size === 'sm'
@@ -29,6 +30,7 @@ function AvatarCircle({ letter, size = 'md' }) {
 
 export default function Navbar() {
   const { user, customer, signOut } = useAuth();
+  const { wishlistCount } = useWishlist();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] =
@@ -157,9 +159,14 @@ export default function Navbar() {
               <>
                 <Link
                   to="/wishlist"
-                  className="text-gray-500 hover:text-brand-600 transition-colors"
+                  className="text-gray-500 hover:text-brand-600 transition-colors relative"
                 >
                   <FiHeart className="h-6 w-6" />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-brand-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {wishlistCount}
+                    </span>
+                  )}
                 </Link>
 
                 <Link
@@ -220,7 +227,20 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex items-center md:hidden">
+          <div className="flex items-center space-x-4 md:hidden">
+            {user && (
+              <Link
+                to="/wishlist"
+                className="text-gray-500 hover:text-brand-600 relative"
+              >
+                <FiHeart className="h-6 w-6" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-brand-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+            )}
             <button
               onClick={() =>
                 setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -372,9 +392,16 @@ export default function Navbar() {
                     <Link
                       to="/wishlist"
                       onClick={closeMenus}
-                      className="text-gray-500 hover:text-brand-600 flex flex-col items-center"
+                      className="text-gray-500 hover:text-brand-600 flex flex-col items-center relative"
                     >
-                      <FiHeart className="h-6 w-6 mb-1" />
+                      <div className="relative">
+                        <FiHeart className="h-6 w-6 mb-1" />
+                        {wishlistCount > 0 && (
+                          <span className="absolute -top-2 -right-2 bg-brand-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                            {wishlistCount}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-xs">Wishlist</span>
                     </Link>
 
