@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 import api from "../lib/api";
@@ -23,6 +24,10 @@ const sortOptions = [
 ];
 
 export default function Shop() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialSearchQuery = searchParams.get("search") || "";
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -92,6 +97,16 @@ export default function Shop() {
       );
     }
 
+    // Search Filter
+    if (initialSearchQuery) {
+      const q = initialSearchQuery.toLowerCase();
+      result = result.filter((product) => {
+        const titleMatch = product.title?.toLowerCase().includes(q);
+        const descMatch = product.description?.toLowerCase().includes(q);
+        return titleMatch || descMatch;
+      });
+    }
+
     // Price Filter
     result = result.filter(
       (product) => product.sellingPrice <= maxPrice
@@ -127,7 +142,7 @@ export default function Shop() {
     // ----------------------------
 
     return result;
-  }, [products, selectedCategory, maxPrice, sortBy]);
+  }, [products, selectedCategory, maxPrice, sortBy, initialSearchQuery]);
 
   const clearFilters = () => {
     setSelectedCategory("all");

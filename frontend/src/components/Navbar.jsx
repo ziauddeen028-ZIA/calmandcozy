@@ -35,12 +35,20 @@ export default function Navbar() {
   const { cartTotalItems } = useCart();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] =
-    useState(false);
+  const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const closeMenus = () => {
     setIsMobileMenuOpen(false);
     setIsMobileCategoriesOpen(false);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+      closeMenus();
+    }
   };
 
   const handleLogout = async () => {
@@ -141,18 +149,19 @@ export default function Navbar() {
 
           {/* Search */}
           <div className="hidden md:flex flex-1 max-w-md ml-8 mr-8">
-            <div className="relative w-full">
-
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiSearch className="text-gray-400" />
-              </div>
+            <form onSubmit={handleSearch} className="relative w-full">
+              <button type="submit" className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                <FiSearch className="text-gray-400 hover:text-brand-600 cursor-pointer" />
+              </button>
 
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full bg-gray-50 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 text-sm"
                 placeholder="Search products..."
               />
-            </div>
+            </form>
           </div>
 
           {/* Desktop Icons */}
@@ -232,19 +241,6 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <div className="flex items-center space-x-4 md:hidden">
-            {user && (
-              <Link
-                to="/wishlist"
-                className="text-gray-500 hover:text-brand-600 relative"
-              >
-                <FiHeart className="h-6 w-6" />
-                {wishlistCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-brand-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                    {wishlistCount}
-                  </span>
-                )}
-              </Link>
-            )}
             <button
               onClick={() =>
                 setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -375,18 +371,19 @@ export default function Navbar() {
 
               {/* Search */}
               <div className="mt-4 px-3">
-                <div className="relative">
-
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiSearch className="text-gray-400" />
-                  </div>
+                <form onSubmit={handleSearch} className="relative">
+                  <button type="submit" className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                    <FiSearch className="text-gray-400 hover:text-brand-600 cursor-pointer" />
+                  </button>
 
                   <input
                     type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full bg-gray-50 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 text-sm"
                     placeholder="Search products..."
                   />
-                </div>
+                </form>
               </div>
 
               {/* Mobile Icons / Auth */}
