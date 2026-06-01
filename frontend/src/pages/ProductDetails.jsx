@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { FiShoppingCart, FiHeart, FiCheck, FiArrowLeft } from 'react-icons/fi';
 import api from '../lib/api';
 import Loader from '../components/Loader';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337';
 
@@ -34,8 +36,15 @@ export default function ProductDetails() {
     fetchProduct();
   }, [id]);
 
+  const { addToCart } = useCart();
+
+  const {
+    handleToggleWishlist,
+    isInWishlist,
+  } = useWishlist();
+
   if (loading) return <Loader />;
-  
+
   if (error || !product) {
     return (
       <div className="text-center py-20">
@@ -48,9 +57,10 @@ export default function ProductDetails() {
   }
 
   const { title, description, sellingPrice, actualPrice, category, stock, images } = product;
+  const inWishlist = isInWishlist(product.documentId);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -67,29 +77,28 @@ export default function ProductDetails() {
           {images && images.length > 1 && (
             <div className="flex sm:flex-col gap-4 overflow-x-auto sm:overflow-y-auto sm:w-24 shrink-0 no-scrollbar">
               {images.map((img) => (
-                <button 
+                <button
                   key={img.id}
                   onClick={() => setActiveImage(img.url)}
-                  className={`relative w-20 h-20 sm:w-full sm:h-24 rounded-lg overflow-hidden border-2 transition-colors ${
-                    activeImage === img.url ? 'border-indigo-600' : 'border-transparent hover:border-gray-300'
-                  }`}
+                  className={`relative w-20 h-20 sm:w-full sm:h-24 rounded-lg overflow-hidden border-2 transition-colors ${activeImage === img.url ? 'border-indigo-600' : 'border-transparent hover:border-gray-300'
+                    }`}
                 >
-                  <img 
-                    src={`${STRAPI_URL}${img.url}`} 
-                    alt={title} 
+                  <img
+                    src={`${STRAPI_URL}${img.url}`}
+                    alt={title}
                     className="w-full h-full object-cover"
                   />
                 </button>
               ))}
             </div>
           )}
-          
+
           {/* Main Image */}
           <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gray-50">
             {activeImage ? (
-              <img 
-                src={`${STRAPI_URL}${activeImage}`} 
-                alt={title} 
+              <img
+                src={`${STRAPI_URL}${activeImage}`}
+                alt={title}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -140,19 +149,19 @@ export default function ProductDetails() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 mt-auto border-t border-gray-100 pt-8">
-            <button 
+            <button
               disabled={stock <= 0}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-4 px-8 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
-              onClick={() => console.log('Add to cart:', title)}
+              onClick={() => addToCart(product.documentId)}
             >
               <FiShoppingCart className="w-5 h-5" />
               {stock > 0 ? 'Add to Cart' : 'Sold Out'}
             </button>
-            <button 
+            <button
               className="px-6 py-4 border-2 border-gray-200 hover:border-gray-300 rounded-xl text-gray-600 hover:text-red-500 transition-colors flex items-center justify-center bg-white shadow-sm hover:shadow-md"
-              onClick={() => console.log('Add to wishlist:', title)}
+              onClick={() => handleToggleWishlist(product.documentId)}
             >
-              <FiHeart className="w-6 h-6" />
+              <FiHeart className={`w-6 h-6 ${inWishlist ? 'text-red-500' : ''}`} />
             </button>
           </div>
         </div>

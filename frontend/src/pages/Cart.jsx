@@ -183,10 +183,13 @@ export default function Cart() {
               </div>
             </div>
 
-            <button className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-4 text-base font-semibold text-white shadow-sm hover:bg-brand-700 transition-all active:scale-[0.98]">
+            <Link
+              to="/checkout"
+              className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-4 text-base font-semibold text-white shadow-sm hover:bg-brand-700 transition-all"
+            >
               Proceed to Checkout
               <FiArrowRight className="h-5 w-5" />
-            </button>
+            </Link>
           </div>
         </div>
       </div>

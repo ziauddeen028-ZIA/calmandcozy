@@ -14,6 +14,7 @@ import {
   deleteAddress,
 } from '../lib/addressService';
 
+
 // ─── Validation ────────────────────────────────────────────────────────────────
 
 const PHONE_REGEX = /^[6-9]\d{9}$/;          // 10-digit Indian mobile
@@ -67,9 +68,8 @@ function Field({ label, name, type = 'text', value, onChange, error, required, p
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`block w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 ${
-          error ? 'border-red-400 bg-red-50' : 'border-gray-300'
-        }`}
+        className={`block w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 ${error ? 'border-red-400 bg-red-50' : 'border-gray-300'
+          }`}
       />
       {error && (
         <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
@@ -101,6 +101,7 @@ function AddressFormModal({ initial, onSave, onCancel, isSaving }) {
     }
     onSave(form);
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
@@ -206,9 +207,8 @@ function AddressFormModal({ initial, onSave, onCancel, isSaving }) {
 
 function AddressCard({ address, onEdit, onDelete, onSetDefault, isDeleting }) {
   return (
-    <div className={`bg-white border rounded-xl p-5 relative transition-shadow hover:shadow-sm ${
-      address.is_default ? 'border-brand-400 ring-1 ring-brand-200' : 'border-gray-200'
-    }`}>
+    <div className={`bg-white border rounded-xl p-5 relative transition-shadow hover:shadow-sm ${address.is_default ? 'border-brand-400 ring-1 ring-brand-200' : 'border-gray-200'
+      }`}>
       {address.is_default && (
         <span className="absolute top-4 right-4 inline-flex items-center gap-1 text-xs font-medium text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full">
           <FiCheck className="h-3 w-3" /> Default
@@ -276,9 +276,8 @@ function ProfileSidebar({ onLogout }) {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                  isActive ? 'bg-brand-50 text-brand-600' : 'text-gray-700 hover:bg-gray-50'
-                }`}
+                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive ? 'bg-brand-50 text-brand-600' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
               >
                 <item.icon className={`mr-3 h-5 w-5 ${isActive ? 'text-brand-600' : 'text-gray-400'}`} />
                 {item.name}
@@ -303,6 +302,8 @@ function ProfileSidebar({ onLogout }) {
 export default function Addresses() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  console.log(location.state);
 
   const [addresses, setAddresses] = useState([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
@@ -349,6 +350,9 @@ export default function Addresses() {
       });
       setModal(null);
       toast.success('Address added successfully');
+      if (location.state?.returnToCheckout) {
+        navigate('/checkout');
+      }
     } catch (err) {
       console.error('[Address] Create failed:', err);
       toast.error(err.message || 'Failed to add address');
