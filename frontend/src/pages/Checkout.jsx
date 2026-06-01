@@ -6,10 +6,11 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../context/CartContext';
 import { fetchAddresses } from '../lib/addressService';
+import { createOrder } from '../lib/orderService';
 
 export default function Checkout() {
   const { user } = useAuth();
-  const { cartItems, loading: cartLoading, cartTotalItems, cartSubtotal } = useCart();
+  const { cartItems, loading: cartLoading, cartTotalItems, cartSubtotal, clearCart } = useCart();
   const navigate = useNavigate();
 
   const [addresses, setAddresses] = useState([]);
@@ -46,15 +47,52 @@ export default function Checkout() {
     loadAddresses();
   }, [user?.id]);
 
-  const handlePlaceOrder = () => {
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+  const handlePlaceOrder = async () => {
     if (!selectedAddressId) {
       toast.error("Please select a delivery address");
       return;
     }
+    
+    setIsPlacingOrder(true);
+    try {
+      const selectedAddr = addresses.find((a) => (a.documentId || a.id) === selectedAddressId);
+      
+      const orderItems = cartItems.map(item => ({
+        productId: item.product.documentId,
+        productName: item.product.title,
+        productImage: item.product.images?.[0]?.url || '',
+        quantity: item.quantity,
+        price: item.product.sellingPrice || item.product.price
+      }));
 
-    // UI only for now
-    toast.success("Order Placed Successfully! (UI Only)");
-    console.log("Placing order with address ID:", selectedAddressId);
+      const shippingEstimate = 0;
+      const totalAmount = cartSubtotal + shippingEstimate;
+
+      const orderData = {
+        orderId: `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        userName: user.user_metadata?.full_name || user.email.split('@')[0],
+        email: user.email,
+        phone: selectedAddr.phone,
+        total: totalAmount,
+        paymentStatus: 'pending',
+        orderStatus: 'pending',
+        shippingAddress: selectedAddr,
+        orderItems: orderItems
+      };
+
+      await createOrder(user.id, orderData);
+      await clearCart();
+      
+      toast.success("Order Placed Successfully!");
+      navigate('/order-success');
+    } catch (error) {
+      console.error("Failed to place order:", error);
+      toast.error("Failed to place order. Please try again.");
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   if (cartLoading || addressesLoading) {
@@ -227,15 +265,15 @@ export default function Checkout() {
 
             <button
               onClick={handlePlaceOrder}
-              disabled={!selectedAddressId}
+              disabled={!selectedAddressId || isPlacingOrder}
               className={`mt-8 w-full rounded-xl px-6 py-4 text-base font-semibold text-white shadow-sm transition-all
-                ${!selectedAddressId
+                ${(!selectedAddressId || isPlacingOrder)
                   ? 'bg-brand-300 cursor-not-allowed'
                   : 'bg-brand-600 hover:bg-brand-700 active:scale-[0.98]'
                 }
               `}
             >
-              Place Order
+              {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
             </button>
 
             {!selectedAddressId && addresses.length > 0 && (

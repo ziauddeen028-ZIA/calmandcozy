@@ -1,0 +1,151 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiPackage, FiMapPin, FiCreditCard } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import { useAuth } from '../hooks/useAuth';
+import { fetchOrderById } from '../lib/orderService';
+
+export default function OrderDetails() {
+  const { id } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadOrder() {
+      if (!user?.id || !id) return;
+      try {
+        setLoading(true);
+        const data = await fetchOrderById(user.id, id);
+        setOrder(data);
+      } catch (err) {
+        toast.error("Failed to load order details");
+        navigate('/orders');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadOrder();
+  }, [user?.id, id, navigate]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-32">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-brand-600"></div>
+      </div>
+    );
+  }
+
+  if (!order) return null;
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="mb-8 flex items-center gap-4">
+        <button 
+          onClick={() => navigate('/orders')}
+          className="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors"
+        >
+          <FiArrowLeft className="h-5 w-5" />
+        </button>
+        <h1 className="text-3xl font-bold text-gray-900">Order Details</h1>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+        <div className="bg-gray-50 px-6 sm:px-8 py-6 border-b border-gray-100">
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Order ID</p>
+              <p className="font-semibold text-gray-900">{order.orderId}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Date</p>
+              <p className="font-semibold text-gray-900">
+                {new Date(order.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                })}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Total</p>
+              <p className="font-bold text-gray-900">₹{order.total}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 sm:p-8">
+          <h3 className="text-lg font-bold text-gray-900 mb-6">Items in your order</h3>
+          <div className="space-y-6">
+            {order.orderItems?.map((item, idx) => (
+              <div key={idx} className="flex gap-4">
+                {item.productImage ? (
+                  <img 
+                    src={`${import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337'}${item.productImage}`} 
+                    alt={item.productName}
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover border border-gray-200 bg-gray-50"
+                  />
+                ) : (
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
+                    <FiPackage className="text-gray-400 h-6 w-6" />
+                  </div>
+                )}
+                
+                <div className="flex-1 flex flex-col justify-center">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold text-gray-900 line-clamp-2">{item.productName}</p>
+                      <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
+                    </div>
+                    <p className="font-semibold text-gray-900">₹{item.price}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <FiMapPin className="text-brand-600" />
+            Shipping Address
+          </h3>
+          {order.shippingAddress ? (
+            <div className="text-gray-600 space-y-1">
+              <p className="font-semibold text-gray-900">{order.shippingAddress.full_name}</p>
+              <p>{order.shippingAddress.address_line_1}</p>
+              {order.shippingAddress.address_line_2 && <p>{order.shippingAddress.address_line_2}</p>}
+              <p>{order.shippingAddress.city}, {order.shippingAddress.state} — {order.shippingAddress.pincode}</p>
+              <p>{order.shippingAddress.country}</p>
+              <p className="pt-2 font-medium">📞 {order.shippingAddress.phone}</p>
+            </div>
+          ) : (
+            <p className="text-gray-500">Address details not available.</p>
+          )}
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <FiCreditCard className="text-brand-600" />
+            Order Status
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Payment Status</p>
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-800">
+                {order.paymentStatus}
+              </span>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Order Status</p>
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-brand-50 text-brand-700">
+                {order.orderStatus}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -18,6 +18,9 @@ import ResetPassword from './pages/ResetPassword';
 import Wishlist from './pages/Wishlist';
 import Profile from './pages/Profile';
 import Addresses from './pages/Addresses';
+import Orders from './pages/Orders';
+import OrderDetails from './pages/OrderDetails';
+import OrderSuccess from './pages/OrderSuccess';
 import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
@@ -42,6 +45,9 @@ function App() {
             <Route path="wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
             <Route path="profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="addresses" element={<ProtectedRoute><Addresses /></ProtectedRoute>} />
+            <Route path="orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+            <Route path="order/:id" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
+            <Route path="order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
           </Route>
 
           {/* Auth Layout routes */}
