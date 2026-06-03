@@ -38,14 +38,14 @@ export const CartProvider = ({ children }) => {
     loadCart();
   }, [loadCart]);
 
-  const addToCart = async (productDocumentId, quantity = 1) => {
+  const addToCart = async (productDocumentId, quantity = 1, customization = {}) => {
     if (!user) {
       toast.error('Please login first');
       return false;
     }
 
     try {
-      await apiAddToCart(user.id, productDocumentId, quantity);
+      await apiAddToCart(user.id, productDocumentId, quantity, customization);
       await loadCart();
       toast.success('Added to Cart 🛒', { duration: 1500 });
       return true;

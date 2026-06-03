@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiShoppingCart, FiHeart, FiCheck, FiArrowLeft } from 'react-icons/fi';
+import { FiShoppingCart, FiHeart, FiCheck, FiArrowLeft, FiUpload } from 'react-icons/fi';
+import toast from 'react-hot-toast';
 import api from '../lib/api';
 import Loader from '../components/Loader';
 import { useCart } from '../context/CartContext';
@@ -9,12 +10,49 @@ import { useWishlist } from '../context/WishlistContext';
 
 const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337';
 
+const getImageUrl = (url) => {
+  if (!url) return "";
+  return url.startsWith("http")
+    ? url
+    : `${STRAPI_URL}${url}`;
+};
+
 export default function ProductDetails() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
+
+  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedSize, setSelectedSize] = useState('');
+  const [customText, setCustomText] = useState('');
+  const [uploadedImageFile, setUploadedImageFile] = useState(null);
+  const [uploadedImagePreview, setUploadedImagePreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleColorChange = (color) => {
+    setSelectedColor(color);
+    if (product?.images) {
+      const exactFileName = `${color.toLowerCase()}.png`;
+      const colorName = color.toLowerCase();
+
+      const colorImage = product.images.find(img => {
+        const imgName = img.name ? img.name.toLowerCase() : '';
+        const imgUrl = img.url ? img.url.toLowerCase() : '';
+
+        return imgName === exactFileName ||
+          imgName.startsWith(colorName + '_') ||
+          imgName === colorName ||
+          imgUrl.includes(exactFileName) ||
+          imgUrl.includes(`/${colorName}_`);
+      });
+
+      if (colorImage) {
+        setActiveImage(colorImage.url);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -37,6 +75,54 @@ export default function ProductDetails() {
   }, [id]);
 
   const { addToCart } = useCart();
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploadedImageFile(file);
+      setUploadedImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (product.stock <= 0) return;
+
+    if (product.customizable) {
+      if (product.customizationType === 't-shirt') {
+        if (!selectedColor && product.availableColors?.length > 0) return toast.error('Please select a color');
+        if (!selectedSize && product.availableSizes?.length > 0) return toast.error('Please select a size');
+      }
+
+      let uploadedImageUrl = null;
+      if (uploadedImageFile) {
+        setIsUploading(true);
+        try {
+          const formData = new FormData();
+          formData.append('files', uploadedImageFile);
+          const uploadRes = await api.post('/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+          uploadedImageUrl = uploadRes.data[0].url;
+        } catch (err) {
+          console.error(err);
+          setIsUploading(false);
+          return toast.error('Failed to upload image');
+        }
+        setIsUploading(false);
+      }
+
+      const customization = {
+        selectedColor,
+        selectedSize,
+        customText,
+        uploadedImageUrl,
+      };
+
+      addToCart(product.documentId, 1, customization);
+    } else {
+      addToCart(product.documentId, 1);
+    }
+  };
 
   const {
     handleToggleWishlist,
@@ -84,7 +170,7 @@ export default function ProductDetails() {
                     }`}
                 >
                   <img
-                    src={`${STRAPI_URL}${img.url}`}
+                    src={getImageUrl(img.url)}
                     alt={title}
                     className="w-full h-full object-cover"
                   />
@@ -93,17 +179,39 @@ export default function ProductDetails() {
             </div>
           )}
 
-          {/* Main Image */}
-          <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gray-50">
+          {/* Main Image with Live Preview */}
+          <div
+            className="relative w-full h-[700px] rounded-2xl overflow-hidden flex items-center justify-center bg-gray-50"
+          >
             {activeImage ? (
               <img
-                src={`${STRAPI_URL}${activeImage}`}
+                src={getImageUrl(activeImage)}
                 alt={title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain transition-all"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400">
                 No Image
+              </div>
+            )}
+
+            {/* Live Preview Overlay */}
+            {product.customizable && (
+              <div className="absolute flex flex-col items-center justify-center pointer-events-none"
+                style={{
+                  top: product.customizationType === 't-shirt' ? '25%' : '15%',
+                  left: product.customizationType === 't-shirt' ? '25%' : '15%',
+                  width: product.customizationType === 't-shirt' ? '50%' : '70%',
+                  height: product.customizationType === 't-shirt' ? '50%' : '70%'
+                }}>
+                {uploadedImagePreview && (
+                  <img src={uploadedImagePreview} alt="Custom" className="max-w-full max-h-[60%] object-contain mb-2 drop-shadow-sm" />
+                )}
+                {customText && (
+                  <span className="text-2xl sm:text-3xl font-black text-center drop-shadow-md whitespace-pre-wrap max-w-full break-words leading-tight" style={{ color: '#111827' }}>
+                    {customText}
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -148,14 +256,78 @@ export default function ProductDetails() {
             </div>
           </div>
 
+          {product.customizable && (
+            <div className="mb-8 space-y-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+              <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2">Customize your {product.customizationType}</h3>
+
+              {product.customizationType === 't-shirt' && product.availableColors && (
+                <div>
+                  <span className="block text-sm font-medium text-gray-700 mb-2">Color</span>
+                  <div className="flex gap-2">
+                    {product.availableColors.map(color => (
+                      <button
+                        key={color}
+                        onClick={() => handleColorChange(color)}
+                        className={`w-8 h-8 rounded-full border-2 ${selectedColor === color ? 'border-indigo-600 ring-2 ring-indigo-600 ring-offset-2' : 'border-gray-300'}`}
+                        style={{ backgroundColor: color.toLowerCase() }}
+                        title={color}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {product.customizationType === 't-shirt' && product.availableSizes && (
+                <div>
+                  <span className="block text-sm font-medium text-gray-700 mb-2">Size</span>
+                  <div className="flex gap-2">
+                    {product.availableSizes.map(size => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={`px-4 py-2 border rounded-md font-medium ${selectedSize === size ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-600'}`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <span className="block text-sm font-medium text-gray-700 mb-2">Custom Text</span>
+                <input
+                  type="text"
+                  maxLength={30}
+                  value={customText}
+                  onChange={(e) => setCustomText(e.target.value)}
+                  placeholder="Enter your custom text..."
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+              </div>
+
+              <div>
+                <span className="block text-sm font-medium text-gray-700 mb-2">Upload Image</span>
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <FiUpload className="w-8 h-8 mb-3 text-gray-400" />
+                    <p className="mb-1 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                    {uploadedImageFile && <p className="text-xs text-indigo-600 font-semibold mt-1">{uploadedImageFile.name}</p>}
+                  </div>
+                  <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                </label>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row gap-4 mt-auto border-t border-gray-100 pt-8">
             <button
-              disabled={stock <= 0}
+              disabled={stock <= 0 || isUploading}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-4 px-8 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
-              onClick={() => addToCart(product.documentId)}
+              onClick={handleAddToCart}
             >
               <FiShoppingCart className="w-5 h-5" />
-              {stock > 0 ? 'Add to Cart' : 'Sold Out'}
+              {isUploading ? 'Uploading...' : stock > 0 ? 'Add to Cart' : 'Sold Out'}
             </button>
             <button
               className="px-6 py-4 border-2 border-gray-200 hover:border-gray-300 rounded-xl text-gray-600 hover:text-red-500 transition-colors flex items-center justify-center bg-white shadow-sm hover:shadow-md"

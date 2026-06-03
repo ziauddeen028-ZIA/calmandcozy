@@ -108,6 +108,22 @@ export default function Cart() {
                     <span className="text-sm text-gray-500">
                       {product.category?.name || "Uncategorized"}
                     </span>
+
+                    {/* Customizations */}
+                    {(item.selectedColor || item.selectedSize || item.customText || item.uploadedImageUrl) && (
+                      <div className="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded-md space-y-1">
+                        {item.selectedColor && <p>Color: <span className="font-semibold">{item.selectedColor}</span></p>}
+                        {item.selectedSize && <p>Size: <span className="font-semibold">{item.selectedSize}</span></p>}
+                        {item.customText && <p>Text: <span className="font-semibold">{item.customText}</span></p>}
+                        {item.uploadedImageUrl && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span>Image:</span>
+                            <img src={`${STRAPI_URL}${item.uploadedImageUrl}`} alt="Custom" className="h-8 w-8 object-cover rounded border border-gray-200 bg-white" />
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <span className="mt-2 text-lg font-bold text-gray-900">
                       ₹{product.sellingPrice || product.price}
                     </span>

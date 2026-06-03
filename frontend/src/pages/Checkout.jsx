@@ -64,7 +64,11 @@ export default function Checkout() {
         productName: item.product.title,
         productImage: item.product.images?.[0]?.url || '',
         quantity: item.quantity,
-        price: item.product.sellingPrice || item.product.price
+        price: item.product.sellingPrice || item.product.price,
+        selectedColor: item.selectedColor,
+        selectedSize: item.selectedSize,
+        customText: item.customText,
+        uploadedImageUrl: item.uploadedImageUrl
       }));
 
       const shippingEstimate = 0;
@@ -232,6 +236,11 @@ export default function Checkout() {
                     />
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-gray-900 line-clamp-1">{product.title}</p>
+                      {(item.selectedColor || item.selectedSize || item.customText) && (
+                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                          {[item.selectedColor, item.selectedSize, item.customText].filter(Boolean).join(' | ')}
+                        </p>
+                      )}
                       <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                       <p className="text-sm font-medium text-gray-900 mt-1">
                         ₹{(product.sellingPrice || product.price) * item.quantity}

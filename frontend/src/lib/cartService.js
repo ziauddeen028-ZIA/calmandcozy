@@ -20,7 +20,7 @@ export const fetchCart = async (supabaseId) => {
   }
 };
 
-export const addToCart = async (supabaseId, productDocumentId, quantity = 1) => {
+export const addToCart = async (supabaseId, productDocumentId, quantity = 1, customization = {}) => {
   try {
     const response = await axios.post(
       `${API_URL}/carts`,
@@ -28,6 +28,7 @@ export const addToCart = async (supabaseId, productDocumentId, quantity = 1) => 
         data: {
           product: productDocumentId,
           quantity: quantity,
+          ...customization
         },
       },
       { headers: getHeaders(supabaseId) }
