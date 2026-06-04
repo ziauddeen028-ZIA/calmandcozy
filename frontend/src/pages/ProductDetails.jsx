@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiShoppingCart, FiHeart, FiCheck, FiArrowLeft, FiUpload } from 'react-icons/fi';
@@ -31,8 +31,25 @@ export default function ProductDetails() {
   const [uploadedImagePreview, setUploadedImagePreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  const fileInputRef = useRef(null);
+  console.log("Product ID:", id);
+  console.log("Saved Color:", localStorage.getItem(`color_${id}`));
+  console.log("Saved Size:", localStorage.getItem(`size_${id}`));
+  useEffect(() => {
+    if (selectedColor !== '') {
+      localStorage.setItem(`color_${id}`, selectedColor);
+    }
+  }, [selectedColor, id]);
+
+  useEffect(() => {
+    if (selectedSize !== '') {
+      localStorage.setItem(`size_${id}`, selectedSize);
+    }
+  }, [selectedSize, id]);
+
   const handleColorChange = (color) => {
     setSelectedColor(color);
+    console.log("Color Selected:", color);
     if (product?.images) {
       const exactFileName = `${color.toLowerCase()}.png`;
       const colorName = color.toLowerCase();
@@ -60,9 +77,29 @@ export default function ProductDetails() {
         const response = await api.get(`/products/${id}?populate=*`);
         const productData = response.data.data;
         setProduct(productData);
-        if (productData?.images?.length > 0) {
+        const savedColor = localStorage.getItem(`color_${id}`);
+        const savedSize = localStorage.getItem(`size_${id}`);
+
+        if (savedColor) {
+          setSelectedColor(savedColor);
+
+          const colorImage = productData.images?.find(img => {
+            const imgName = img.name?.toLowerCase() || '';
+            return imgName.includes(savedColor.toLowerCase());
+          });
+
+          if (colorImage) {
+            setActiveImage(colorImage.url);
+          }
+        } else if (productData?.images?.length > 0) {
           setActiveImage(productData.images[0].url);
         }
+
+        if (savedSize) {
+          setSelectedSize(savedSize);
+        }
+
+
       } catch (err) {
         console.error('Error fetching product details:', err);
         setError('Failed to load product details. Please try again later.');
@@ -81,6 +118,15 @@ export default function ProductDetails() {
     if (file) {
       setUploadedImageFile(file);
       setUploadedImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setUploadedImageFile(null);
+    setUploadedImagePreview(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -210,6 +256,8 @@ export default function ProductDetails() {
       };
 
       addToCart(product.documentId, 1, customization);
+      localStorage.removeItem(`color_${id}`);
+      localStorage.removeItem(`size_${id}`);
     } else {
       addToCart(product.documentId, 1);
     }
@@ -274,8 +322,8 @@ export default function ProductDetails() {
                     }
                   }}
                   className={`relative w-20 h-20 sm:w-full sm:h-24 rounded-lg overflow-hidden border-2 transition-colors ${activeImage === img.url
-                      ? 'border-indigo-600'
-                      : 'border-transparent hover:border-gray-300'
+                    ? 'border-indigo-600'
+                    : 'border-transparent hover:border-gray-300'
                     }`}
                 >
                   <img
@@ -308,18 +356,55 @@ export default function ProductDetails() {
             {product.customizable && (
               <div className="absolute flex flex-col items-center justify-center pointer-events-none"
                 style={{
-                  top: product.customizationType === 't-shirt' ? '25%' : '15%',
-                  left: product.customizationType === 't-shirt' ? '25%' : '15%',
-                  width: product.customizationType === 't-shirt' ? '50%' : '70%',
-                  height: product.customizationType === 't-shirt' ? '50%' : '70%'
+                  top: product.customizationType === 't-shirt' ? '25%' : product.customizationType === 'mug' ? '15%' : '15%',
+                  left: product.customizationType === 't-shirt' ? '25%' : product.customizationType === 'mug' ? '12%' : '15%',
+                  width: product.customizationType === 't-shirt' ? '50%' : product.customizationType === 'mug' ? '65%' : '70%',
+                  height: product.customizationType === 't-shirt' ? '50%' : product.customizationType === 'mug' ? '70%' : '70%'
                 }}>
-                {uploadedImagePreview && (
-                  <img src={uploadedImagePreview} alt="Custom" className="max-w-full max-h-[60%] object-contain mb-2 drop-shadow-sm" />
+                {/* T-Shirt Preview */}
+                {product.customizationType === "t-shirt" && (
+                  <>
+                    {uploadedImagePreview && (
+                      <img
+                        src={uploadedImagePreview}
+                        alt="Custom"
+                        className="max-w-full max-h-[60%] object-contain mb-2 drop-shadow-sm"
+                      />
+                    )}
+
+                    {customText && (
+                      <span
+                        className="text-2xl sm:text-3xl font-black text-center drop-shadow-md whitespace-pre-wrap max-w-full break-words leading-tight"
+                        style={{ color: "#111827" }}
+                      >
+                        {customText}
+                      </span>
+                    )}
+                  </>
                 )}
-                {customText && (
-                  <span className="text-2xl sm:text-3xl font-black text-center drop-shadow-md whitespace-pre-wrap max-w-full break-words leading-tight" style={{ color: '#111827' }}>
-                    {customText}
-                  </span>
+
+                {/* Mug Preview */}
+                {product.customizationType === "mug" && (
+                  <>
+                    {uploadedImagePreview && (
+                      <img
+                        src={uploadedImagePreview}
+                        alt="Custom"
+                        className="max-w-full max-h-[80%] object-contain drop-shadow-sm"
+                      />
+                    )}
+
+                    {customText && (
+                      <span
+                        className="text-lg font-bold text-center mt-2"
+                        style={{
+                          color: selectedColor === "Black" ? "#ffffff" : "#111827"
+                        }}
+                      >
+                        {customText}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -385,6 +470,33 @@ export default function ProductDetails() {
                   </div>
                 </div>
               )}
+              {product.customizationType === 'mug' && product.availableColors && (
+                <div>
+                  <span className="block text-sm font-medium text-gray-700 mb-2">
+                    Mug Color
+                  </span>
+
+                  <div className="flex gap-2">
+                    {product.availableColors.map(color => (
+                      <button
+                        key={color}
+                        onClick={() => handleColorChange(color)}
+                        className={`w-8 h-8 rounded-full border-2 ${selectedColor === color
+                          ? 'border-indigo-600 ring-2 ring-indigo-600 ring-offset-2'
+                          : 'border-gray-300'
+                          }`}
+                        style={{
+                          backgroundColor:
+                            color.toLowerCase() === 'brown'
+                              ? '#8B4513'
+                              : color.toLowerCase()
+                        }}
+                        title={color}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {product.customizationType === 't-shirt' && product.availableSizes && (
                 <div>
@@ -403,17 +515,7 @@ export default function ProductDetails() {
                 </div>
               )}
 
-              <div>
-                <span className="block text-sm font-medium text-gray-700 mb-2">Custom Text</span>
-                <input
-                  type="text"
-                  maxLength={30}
-                  value={customText}
-                  onChange={(e) => setCustomText(e.target.value)}
-                  placeholder="Enter your custom text..."
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                />
-              </div>
+
 
               <div>
                 <span className="block text-sm font-medium text-gray-700 mb-2">Upload Image</span>
@@ -421,9 +523,33 @@ export default function ProductDetails() {
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                     <FiUpload className="w-8 h-8 mb-3 text-gray-400" />
                     <p className="mb-1 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                    {uploadedImageFile && <p className="text-xs text-indigo-600 font-semibold mt-1">{uploadedImageFile.name}</p>}
+                    {uploadedImageFile && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <p className="text-xs text-indigo-600 font-semibold">
+                          {uploadedImageFile.name}
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRemoveImage();
+                          }}
+                          className="ml-2 text-red-500 font-bold hover:text-red-700"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                  />
                 </label>
               </div>
             </div>
@@ -440,7 +566,35 @@ export default function ProductDetails() {
             </button>
             <button
               className="px-6 py-4 border-2 border-gray-200 hover:border-gray-300 rounded-xl text-gray-600 hover:text-red-500 transition-colors flex items-center justify-center bg-white shadow-sm hover:shadow-md"
-              onClick={() => handleToggleWishlist(product.documentId)}
+              onClick={() => {
+                if (product.customizable) {
+                  if (
+                    product.customizationType === "t-shirt" &&
+                    !selectedColor &&
+                    product.availableColors?.length > 0
+                  ) {
+                    return toast.error("Please select a color");
+                  }
+
+                  if (
+                    product.customizationType === "t-shirt" &&
+                    !selectedSize &&
+                    product.availableSizes?.length > 0
+                  ) {
+                    return toast.error("Please select a size");
+                  }
+
+                  if (
+                    product.customizationType === "mug" &&
+                    !selectedColor &&
+                    product.availableColors?.length > 0
+                  ) {
+                    return toast.error("Please select a mug color");
+                  }
+                }
+
+                handleToggleWishlist(product.documentId);
+              }}
             >
               <FiHeart className={`w-6 h-6 ${inWishlist ? 'text-red-500' : ''}`} />
             </button>

@@ -40,8 +40,12 @@ const Wishlist = () => {
           {wishlist.map((item) => {
             const product = item.product;
             const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337';
-            const imageUrl = product?.images?.[0]?.url 
-              ? `${STRAPI_URL}${product.images[0].url}` 
+            const imageUrl = product?.images?.[0]?.url
+              ? (
+                product.images[0].url.startsWith("http")
+                  ? product.images[0].url
+                  : `${STRAPI_URL}${product.images[0].url}`
+              )
               : "https://via.placeholder.com/300";
 
             return (
