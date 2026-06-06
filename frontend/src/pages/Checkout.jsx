@@ -7,6 +7,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../context/CartContext';
 import { fetchAddresses } from '../lib/addressService';
 import { createOrder } from '../lib/orderService';
+import { createPaymentOrder } from '../lib/paymentService';
 
 export default function Checkout() {
   const { user } = useAuth();
@@ -58,45 +59,92 @@ export default function Checkout() {
     setIsPlacingOrder(true);
     try {
       const selectedAddr = addresses.find((a) => (a.documentId || a.id) === selectedAddressId);
-
-      const orderItems = cartItems.map(item => ({
-        productId: item.product.documentId,
-        productName: item.product.title,
-        productImage: item.product.images?.[0]?.url || '',
-        quantity: item.quantity,
-        price: item.product.sellingPrice || item.product.price,
-        selectedColor: item.selectedColor,
-        selectedSize: item.selectedSize,
-        customText: item.customText,
-        uploadedImageUrl: item.uploadedImageUrl,
-        previewImageUrl: item.previewImageUrl,
-        previewImage: item.previewImageId,
-      }));
-
       const shippingEstimate = 0;
       const totalAmount = cartSubtotal + shippingEstimate;
 
-      const orderData = {
-        orderId: `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-        userName: user.user_metadata?.full_name || user.email.split('@')[0],
-        email: user.email,
-        phone: selectedAddr.phone,
-        total: totalAmount,
-        paymentStatus: 'pending',
-        orderStatus: 'pending',
-        shippingAddress: selectedAddr,
-        orderItems: orderItems
+      // 1. Create Razorpay order from backend
+      const paymentOrder = await createPaymentOrder(user.id, totalAmount);
+
+      // 2. Open Razorpay checkout
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: paymentOrder.amount,
+        currency: paymentOrder.currency || "INR",
+        name: "Calm & Cozy",
+        description: "Order Payment",
+        order_id: paymentOrder.id || paymentOrder.orderId || paymentOrder.order_id,
+        handler: async function (response) {
+          try {
+            // Payment successful, now create the Strapi order
+            const orderItems = cartItems.map(item => ({
+              productId: item.product.documentId,
+              productName: item.product.title,
+              productImage: item.product.images?.[0]?.url || '',
+              quantity: item.quantity,
+              price: item.product.sellingPrice || item.product.price,
+              selectedColor: item.selectedColor,
+              selectedSize: item.selectedSize,
+              customText: item.customText,
+              uploadedImageUrl: item.uploadedImageUrl,
+              previewImageUrl: item.previewImageUrl,
+              previewImage: item.previewImageId,
+            }));
+
+            const orderData = {
+              orderId: `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+              userName: user.user_metadata?.full_name || user.email.split('@')[0],
+              email: user.email,
+              phone: selectedAddr.phone,
+              total: totalAmount,
+              paymentStatus: 'paid',
+              transactionId: response.razorpay_payment_id,
+              orderStatus: 'pending',
+              shippingAddress: selectedAddr,
+              orderItems: orderItems
+            };
+
+            await createOrder(user.id, orderData);
+
+            try {
+              await clearCart();
+            } catch (err) {
+              console.error("Cart clear failed:", err);
+            }
+
+            toast.success("Payment successful! Order placed.");
+            navigate('/order-success');
+          } catch (error) {
+            console.error("Failed to save order:", error);
+            toast.error("Payment received, but failed to save order. Please contact support.");
+            setIsPlacingOrder(false);
+          }
+        },
+        prefill: {
+          name: user.user_metadata?.full_name || user.email.split('@')[0],
+          email: user.email,
+          contact: selectedAddr.phone,
+        },
+        theme: {
+          color: "#0f766e" // Matches brand-600
+        },
+        modal: {
+          ondismiss: function () {
+            setIsPlacingOrder(false);
+            toast.error("Payment cancelled");
+          }
+        }
       };
 
-      await createOrder(user.id, orderData);
-      await clearCart();
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response) {
+        setIsPlacingOrder(false);
+        toast.error(response.error.description || "Payment failed. Please try again.");
+      });
+      rzp.open();
 
-      toast.success("Order Placed Successfully!");
-      navigate('/order-success');
     } catch (error) {
-      console.error("Failed to place order:", error);
-      toast.error("Failed to place order. Please try again.");
-    } finally {
+      console.error("Failed to initiate payment:", error);
+      toast.error("Failed to initiate payment. Please try again.");
       setIsPlacingOrder(false);
     }
   };
