@@ -39,6 +39,9 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isTshirtOpen, setIsTshirtOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
 
   const closeMenus = () => {
     setIsMobileMenuOpen(false);
@@ -56,6 +59,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     await signOut();
     closeMenus();
+    confirm("Are you sure you want to logout?");
     navigate('/');
   };
 
@@ -94,7 +98,7 @@ export default function Navbar() {
             </Link>
 
             {/* Categories */}
-            <div className="relative group">
+            <div className="relative group pb-2">
 
               <button className="text-gray-700 hover:text-brand-600 font-medium transition-colors flex items-center">
                 Categories
@@ -102,7 +106,7 @@ export default function Navbar() {
               </button>
 
               {/* Dropdown */}
-              <div className="absolute left-0 top-8 hidden group-hover:block w-56 bg-white shadow-xl rounded-xl border border-gray-100 overflow-hidden z-50">
+              <div className="absolute left-0 top-full mt-0 hidden group-hover:block w-56 bg-white shadow-xl rounded-xl border border-gray-100 z-50">
 
                 <Link
                   to="/shop?category=t-shirt-customize"
@@ -111,12 +115,39 @@ export default function Navbar() {
                   T-Shirt Customize
                 </Link>
 
-                <Link
-                  to="/shop?category=t-shirts"
-                  className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-brand-600"
+                <div
+                  className="relative"
+                  onMouseEnter={() => setActiveCategory("tshirts")}
+                  onMouseLeave={() => setActiveCategory(null)}
                 >
-                  T-Shirt
-                </Link>
+                  <Link
+                    to="/shop?category=t-shirts"
+                    className="flex items-center justify-between px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    T-Shirts
+                    <FiChevronDown className="h-3 w-3 -rotate-90" />
+                  </Link>
+
+                  {activeCategory === "tshirts" && (
+                    <div className="absolute left-full top-0 w-52 bg-white shadow-xl rounded-xl border border-gray-100 z-[999]">
+                      <Link to="/shop?category=t-shirts" className="block px-4 py-3 hover:bg-gray-50">
+                        All T-Shirts
+                      </Link>
+
+                      <Link to="/shop?category=t-shirts&theme=anime" className="block px-4 py-3 hover:bg-gray-50">
+                        Anime
+                      </Link>
+
+                      <Link to="/shop?category=t-shirts&theme=football" className="block px-4 py-3 hover:bg-gray-50">
+                        Football
+                      </Link>
+
+                      <Link to="/shop?category=t-shirts&theme=cricket" className="block px-4 py-3 hover:bg-gray-50">
+                        Cricket
+                      </Link>
+                    </div>
+                  )}
+                </div>
 
                 <Link
                   to="/shop?category=oversized-t-shirts"
@@ -297,7 +328,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25 }}
-            className="md:hidden bg-white border-t border-gray-200 overflow-hidden"
+            className="md:hidden bg-white border-t border-gray-200 overflow-y-auto max-h-[calc(100vh-64px)]"
           >
             <div className="px-3 pt-3 pb-5 space-y-2">
 
@@ -360,13 +391,66 @@ export default function Navbar() {
                           T-Shirt Customize
                         </Link>
 
-                        <Link
-                          to="/shop?category=t-shirts"
-                          onClick={closeMenus}
-                          className="block px-3 py-2 rounded-md text-sm text-gray-600 hover:bg-gray-50"
-                        >
-                          T-Shirt
-                        </Link>
+                        <div>
+                          <button
+                            onClick={() => setIsTshirtOpen(!isTshirtOpen)}
+                            className="w-full flex items-center justify-between px-3 py-2 rounded-md text-sm text-gray-600 hover:bg-gray-50"
+                          >
+                            <span>T-Shirts</span>
+
+                            <FiChevronDown
+                              className={`transition-transform duration-200 ${isTshirtOpen ? "rotate-180" : ""
+                                }`}
+                            />
+                          </button>
+
+                          <AnimatePresence>
+                            {isTshirtOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="ml-4 border-l border-gray-200 pl-3">
+
+                                  <Link
+                                    to="/shop?category=t-shirts"
+                                    onClick={closeMenus}
+                                    className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-md"
+                                  >
+                                    All T-Shirts
+                                  </Link>
+
+                                  <Link
+                                    to="/shop?category=t-shirts&theme=anime"
+                                    onClick={closeMenus}
+                                    className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-md"
+                                  >
+                                    Anime
+                                  </Link>
+
+                                  <Link
+                                    to="/shop?category=t-shirts&theme=football"
+                                    onClick={closeMenus}
+                                    className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-md"
+                                  >
+                                    Football
+                                  </Link>
+
+                                  <Link
+                                    to="/shop?category=t-shirts&theme=cricket"
+                                    onClick={closeMenus}
+                                    className="block px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-md"
+                                  >
+                                    Cricket
+                                  </Link>
+
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
 
                         <Link
                           to="/shop?category=oversized-t-shirts"

@@ -33,13 +33,21 @@ export default function Shop() {
   const [error, setError] = useState(null);
 
   // FILTER & SORT STATES
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState(
+    searchParams.get("category") || "all"
+  );
+  useEffect(() => {
+  setSelectedCategory(searchParams.get("category") || "all");
+}, [location.search]);
+
   const [maxPrice, setMaxPrice] = useState(5000);
   const [sortBy, setSortBy] = useState("newest");
 
   // UI STATES
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
+
+  const selectedTheme = searchParams.get("theme") || "";
 
   // FORMAT CATEGORY
   const formattedCategory = selectedCategory !== "all"
@@ -90,6 +98,12 @@ export default function Shop() {
     let result = [...products];
 
     // Category Filter
+    if (selectedTheme) {
+      result = result.filter(
+        (product) =>
+          product.theme?.toLowerCase() === selectedTheme.toLowerCase()
+      );
+    }
     if (selectedCategory && selectedCategory !== "all") {
       result = result.filter(
         (product) =>
