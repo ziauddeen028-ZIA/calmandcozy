@@ -12,6 +12,7 @@ const categoryMap = {
   "t-shirts": "T-Shirts",
   "oversized-t-shirts": "Oversized T-Shirts",
   "mugs": "Mugs",
+  "mug-customize": "Mug Customize",
   "mouse-pad": "Mouse Pad",
   "desk-pad": "Desk Pad",
 };
@@ -37,8 +38,8 @@ export default function Shop() {
     searchParams.get("category") || "all"
   );
   useEffect(() => {
-  setSelectedCategory(searchParams.get("category") || "all");
-}, [location.search]);
+    setSelectedCategory(searchParams.get("category") || "all");
+  }, [location.search]);
 
   const [maxPrice, setMaxPrice] = useState(5000);
   const [sortBy, setSortBy] = useState("newest");
@@ -96,6 +97,13 @@ export default function Shop() {
   // FILTER & SORT PRODUCTS
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];
+    console.log(
+      products.map((p) => ({
+        title: p.title,
+        categoryName: p.category?.name,
+        categorySlug: p.category?.slug,
+      }))
+    );
 
     // Category Filter
     if (selectedTheme) {
@@ -105,10 +113,15 @@ export default function Shop() {
       );
     }
     if (selectedCategory && selectedCategory !== "all") {
-      result = result.filter(
-        (product) =>
-          product.category?.slug?.toLowerCase() === selectedCategory
-      );
+      result = result.filter((product) => {
+        console.log(
+          product.title,
+          "Category Slug:",
+          product.category?.slug
+        );
+
+        return product.category?.slug?.toLowerCase() === selectedCategory;
+      });
     }
 
     // Search Filter

@@ -17,6 +17,21 @@ const getImageUrl = (url) => {
     : `${STRAPI_URL}${url}`;
 };
 
+// Preferred display order for sizes
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+
+function sortVariants(variants) {
+  if (!variants?.length) return [];
+  return [...variants].sort((a, b) => {
+    const ai = SIZE_ORDER.indexOf((a.size || '').toUpperCase());
+    const bi = SIZE_ORDER.indexOf((b.size || '').toUpperCase());
+    if (ai === -1 && bi === -1) return 0;
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+}
+
 export default function ProductDetails() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
@@ -31,10 +46,11 @@ export default function ProductDetails() {
   const [uploadedImagePreview, setUploadedImagePreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Variant-based selection (for non-customizable apparel with variants)
+  const [selectedVariant, setSelectedVariant] = useState(null);
+
   const fileInputRef = useRef(null);
-  console.log("Product ID:", id);
-  console.log("Saved Color:", localStorage.getItem(`color_${id}`));
-  console.log("Saved Size:", localStorage.getItem(`size_${id}`));
+
   useEffect(() => {
     if (selectedColor !== '') {
       localStorage.setItem(`color_${id}`, selectedColor);
@@ -49,7 +65,6 @@ export default function ProductDetails() {
 
   const handleColorChange = (color) => {
     setSelectedColor(color);
-    console.log("Color Selected:", color);
     if (product?.images) {
       const exactFileName = `${color.toLowerCase()}.png`;
       const colorName = color.toLowerCase();
@@ -92,13 +107,15 @@ export default function ProductDetails() {
             setActiveImage(colorImage.url);
           }
         } else if (productData?.images?.length > 0) {
-          setActiveImage(productData.images[0].url);
+          setActiveImage(
+            productData.images?.[1]?.url ||
+            productData.images?.[0]?.url
+          );
         }
 
         if (savedSize) {
           setSelectedSize(savedSize);
         }
-
 
       } catch (err) {
         console.error('Error fetching product details:', err);
@@ -195,7 +212,36 @@ export default function ProductDetails() {
     });
   };
 
+  // Determine if this product uses variant-based sizing
+  // (non-customizable product that has a variants array with at least one entry)
+  const hasVariants = !product?.customizable && product?.variants?.length > 0;
+  const sortedVariants = hasVariants ? sortVariants(product.variants) : [];
+
+  // Effective stock: for variant products use the selected variant's stock,
+  // otherwise fall back to product-level stock.
+  const effectiveStock = hasVariants
+    ? (selectedVariant ? selectedVariant.stock : null)
+    : (product?.stock ?? 0);
+
   const handleAddToCart = async () => {
+    // ── Variant-based (apparel) product ──
+    if (hasVariants) {
+      if (!selectedVariant) {
+        return toast.error('Please select a size');
+      }
+      if (selectedVariant.stock <= 0) {
+        return toast.error('Selected size is out of stock');
+      }
+
+      addToCart(product.documentId, 1, {
+        variantId: selectedVariant.id,
+        variantSize: selectedVariant.size,
+        selectedSize: selectedVariant.size,
+      });
+      return;
+    }
+
+    // ── Customizable product ──
     if (product.stock <= 0) return;
 
     if (product.customizable) {
@@ -268,6 +314,7 @@ export default function ProductDetails() {
       localStorage.removeItem(`color_${id}`);
       localStorage.removeItem(`size_${id}`);
     } else {
+      // Plain product (no variants, not customizable)
       addToCart(product.documentId, 1);
     }
   };
@@ -291,7 +338,29 @@ export default function ProductDetails() {
   }
 
   const { title, description, sellingPrice, actualPrice, category, stock, images } = product;
+  const galleryImages = images?.slice(1) || [];
   const inWishlist = isInWishlist(product.documentId);
+
+  // Add to Cart button disabled states
+  const isAddToCartDisabled = (() => {
+    if (isUploading) return true;
+    if (hasVariants) {
+      // Disabled if no variant selected or variant is out of stock
+      return !selectedVariant || selectedVariant.stock <= 0;
+    }
+    return stock <= 0;
+  })();
+
+  // Button label
+  const addToCartLabel = (() => {
+    if (isUploading) return 'Uploading...';
+    if (hasVariants) {
+      if (!selectedVariant) return 'Select a Size';
+      if (selectedVariant.stock <= 0) return 'Sold Out';
+      return 'Add to Cart';
+    }
+    return stock > 0 ? 'Add to Cart' : 'Sold Out';
+  })();
 
   return (
     <motion.div
@@ -304,13 +373,13 @@ export default function ProductDetails() {
         <FiArrowLeft className="mr-2" /> Back to Shop
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
         {/* Image Gallery */}
         <div className="flex flex-col-reverse sm:flex-row gap-4">
           {/* Thumbnails */}
-          {images && images.length > 1 && (
+          {galleryImages.length > 0 && (
             <div className="flex sm:flex-col gap-4 overflow-x-auto sm:overflow-y-auto sm:w-24 shrink-0 no-scrollbar">
-              {images.map((img) => (
+              {galleryImages.map((img) => (
                 <button
                   key={img.id}
                   onClick={() => {
@@ -347,7 +416,7 @@ export default function ProductDetails() {
 
           {/* Main Image with Live Preview */}
           <div
-            className="relative w-full h-[700px] rounded-2xl overflow-hidden flex items-center justify-center bg-gray-50"
+            className="relative w-full h-full rounded-2xl overflow-hidden flex items-start justify-center bg-gray-50"
           >
             {activeImage ? (
               <img
@@ -421,18 +490,18 @@ export default function ProductDetails() {
         </div>
 
         {/* Product Info */}
-        <div className="flex flex-col">
+        <div className="flex flex-col pt-0">
           <div className="mb-6">
             <span className="text-sm text-indigo-600 font-semibold uppercase tracking-wider">
               {category?.name || 'Uncategorized'}
             </span>
-            <h1 className="mt-2 text-4xl font-extrabold text-gray-900 tracking-tight">
+            <h1 className="mt-2 text-4xl font-bold text-gray-800 tracking-tight">
               {title}
             </h1>
           </div>
 
           <div className="flex items-end gap-4 mb-6">
-            <span className="text-4xl font-bold text-gray-900">₹{sellingPrice}</span>
+            <span className="text-4xl font-bold text-gray-800">₹{sellingPrice}</span>
             {actualPrice && actualPrice > sellingPrice && (
               <span className="text-xl text-gray-400 line-through mb-1">₹{actualPrice}</span>
             )}
@@ -447,18 +516,94 @@ export default function ProductDetails() {
             <p>{description}</p>
           </div>
 
-          <div className="mb-8">
+          {/* Stock indicator */}
+          <div className="mb-6">
             <div className="flex items-center text-sm">
-              {stock > 0 ? (
-                <span className="flex items-center text-green-600 font-medium">
-                  <FiCheck className="mr-1.5 w-5 h-5" /> In Stock ({stock} available)
-                </span>
+              {hasVariants ? (
+                // For variant products, show per-variant stock after selection
+                selectedVariant ? (
+                  selectedVariant.stock > 0 ? (
+                    <span className="flex items-center text-green-600 font-medium">
+                      <FiCheck className="mr-1.5 w-5 h-5" /> In Stock ({selectedVariant.stock} available)
+                    </span>
+                  ) : (
+                    <span className="text-red-500 font-medium">Out of Stock for this size</span>
+                  )
+                ) : (
+                  <span className="text-gray-500 font-medium">Select a size to see availability</span>
+                )
               ) : (
-                <span className="text-red-500 font-medium">Out of Stock</span>
+                stock > 0 ? (
+                  <span className="flex items-center text-green-600 font-medium">
+                    <FiCheck className="mr-1.5 w-5 h-5" /> In Stock ({stock} available)
+                  </span>
+                ) : (
+                  <span className="text-red-500 font-medium">Out of Stock</span>
+                )
               )}
             </div>
           </div>
 
+          {/* ── Variant-based Size Selector (non-customizable apparel) ── */}
+          {hasVariants && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-gray-800">
+                  Size
+                  {selectedVariant && (
+                    <span className="ml-2 text-indigo-600">— {selectedVariant.size}</span>
+                  )}
+                </span>
+                {!selectedVariant && (
+                  <span className="text-xs text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded-full">
+                    Required
+                  </span>
+                )}
+              </div>
+
+              <div className="flex gap-2 flex-wrap">
+                {sortedVariants.map((variant) => {
+                  const isSelected = selectedVariant?.id === variant.id;
+                  const outOfStock = variant.stock <= 0;
+
+                  return (
+                    <button
+                      key={variant.id}
+                      onClick={() => {
+                        if (!outOfStock) setSelectedVariant(variant);
+                      }}
+                      disabled={outOfStock}
+                      title={outOfStock ? `${variant.size} — Out of stock` : `${variant.size} — ${variant.stock} left`}
+                      className={`
+                        relative px-4 py-2.5 rounded-lg border-2 font-semibold text-sm transition-all
+                        ${isSelected
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md ring-2 ring-indigo-300 ring-offset-1'
+                          : outOfStock
+                            ? 'bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50'
+                        }
+                      `}
+                    >
+                      {variant.size}
+                      {outOfStock && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="absolute w-full h-0.5 bg-gray-300 rotate-45 top-1/2 left-0" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedVariant && selectedVariant.stock > 0 && selectedVariant.stock <= 5 && (
+                <p className="mt-2 text-xs text-amber-600 font-medium">
+                  ⚠ Only {selectedVariant.stock} left in this size — order soon!
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* ── Customizable product options (unchanged) ── */}
           {product.customizable && (
             <div className="mb-8 space-y-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
               <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2">Customize your {product.customizationType}</h3>
@@ -507,22 +652,29 @@ export default function ProductDetails() {
                 </div>
               )}
 
-              {product.customizationType === 't-shirt' && product.availableSizes && (
-                <div>
-                  <span className="block text-sm font-medium text-gray-700 mb-2">Size</span>
-                  <div className="flex gap-2">
-                    {product.availableSizes.map(size => (
-                      <button
-                        key={size}
-                        onClick={() => setSelectedSize(size)}
-                        className={`px-4 py-2 border rounded-md font-medium ${selectedSize === size ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300 hover:border-indigo-600'}`}
-                      >
-                        {size}
-                      </button>
-                    ))}
+              {product.customizationType === 't-shirt' &&
+                product.availableSizes?.length > 0 && (
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 mb-2">
+                      Size
+                    </span>
+
+                    <div className="flex gap-2 flex-wrap">
+                      {product.availableSizes.map((size) => (
+                        <button
+                          key={size}
+                          onClick={() => setSelectedSize(size)}
+                          className={`px-4 py-2 border rounded-md font-medium ${selectedSize === size
+                            ? 'bg-indigo-600 text-white border-indigo-600'
+                            : 'bg-white text-gray-700 border-gray-300'
+                            }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
 
 
@@ -566,16 +718,22 @@ export default function ProductDetails() {
 
           <div className="flex flex-col sm:flex-row gap-4 mt-auto border-t border-gray-100 pt-8">
             <button
-              disabled={stock <= 0 || isUploading}
+              disabled={isAddToCartDisabled}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-4 px-8 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
               onClick={handleAddToCart}
             >
               <FiShoppingCart className="w-5 h-5" />
-              {isUploading ? 'Uploading...' : stock > 0 ? 'Add to Cart' : 'Sold Out'}
+              {addToCartLabel}
             </button>
             <button
               className="px-6 py-4 border-2 border-gray-200 hover:border-gray-300 rounded-xl text-gray-600 hover:text-red-500 transition-colors flex items-center justify-center bg-white shadow-sm hover:shadow-md"
               onClick={() => {
+                // Variant products
+                if (hasVariants && !selectedVariant) {
+                  return toast.error("Please select a size");
+                }
+
+                // Customizable products
                 if (product.customizable) {
                   if (
                     product.customizationType === "t-shirt" &&

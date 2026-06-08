@@ -85,6 +85,22 @@ export default function Orders() {
     }
   };
 
+  const getPaymentStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return 'bg-green-100 text-green-800';
+
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex flex-col lg:flex-row gap-8">
@@ -128,11 +144,22 @@ export default function Orders() {
                           })}
                         </p>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getStatusColor(order.orderStatus)}`}>
-                          {order.orderStatus}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getStatusColor(order.orderStatus)}`}
+                        >
+                          Order: {order.orderStatus}
                         </span>
-                        <p className="font-bold text-gray-900">₹{order.total}</p>
+
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getPaymentStatusColor(order.paymentStatus)}`}
+                        >
+                          Payment: {order.paymentStatus}
+                        </span>
+
+                        <p className="font-bold text-gray-900 ml-2">
+                          ₹{order.total}
+                        </p>
                       </div>
                     </div>
 

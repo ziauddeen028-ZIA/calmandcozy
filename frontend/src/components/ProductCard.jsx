@@ -8,7 +8,7 @@ import { useCart } from '../context/CartContext';
 const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || 'http://localhost:1337';
 
 export default function ProductCard({ product }) {
-  const { documentId, title, sellingPrice, actualPrice, category, images } = product;
+  const { documentId, title, sellingPrice, actualPrice, category, images, customizable } = product;
   const { handleToggleWishlist, isInWishlist } = useWishlist();
   const { addToCart } = useCart();
 
@@ -32,25 +32,33 @@ export default function ProductCard({ product }) {
 
   return (
     <motion.div
-      whileHover={{ y: -5 }}
+      whileHover={{ y: customizable ? -7 : -5 }}
       transition={{ duration: 0.2 }}
-      className="bg-white rounded-2xl shadow-sm hover:shadow-xl overflow-hidden flex flex-col group border border-gray-100 transition-shadow duration-300"
+      className={`bg-white rounded-2xl overflow-hidden flex flex-col group transition-all duration-300 ${customizable
+          ? 'border-2 border-blue-500 shadow-[0_0_0_1px_#3b82f6,0_4px_24px_rgba(59,130,246,0.15)] hover:shadow-[0_0_0_2px_#2563eb,0_8px_32px_rgba(59,130,246,0.30)]'
+          : 'border border-gray-100 shadow-sm hover:shadow-xl'
+        }`}
     >
       {/* Image */}
-      <Link to={`/product/${documentId}`} className="relative block overflow-hidden aspect-square">
+      <Link to={`/product/${documentId}`} className="relative block overflow-hidden aspect-square bg-gray-100 flex items-center justify-center">
         <img
           src={imageUrl}
           alt={title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
+        {/* CUSTOM badge */}
+        {customizable && (
+          <div className="absolute top-3 left-3 flex items-center gap-1 bg-blue-700 text-white text-[10px] sm:text-xs font-bold px-2 py-1 rounded-full shadow-md tracking-wide">
+            ✨ CUSTOM
+          </div>
+        )}
         {/* Wishlist Button */}
         <button
-          className={`absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm hover:bg-red-50 hover:text-red-500 transition-colors ${
-            inWishlist
-              ? 'opacity-100 text-red-500'
-              : 'opacity-100 text-gray-700 md:opacity-0 md:group-hover:opacity-100'
-          }`}
+          className={`absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm hover:bg-red-50 hover:text-red-500 transition-colors ${inWishlist
+            ? 'opacity-100 text-red-500'
+            : 'opacity-100 text-gray-700 md:opacity-0 md:group-hover:opacity-100'
+            }`}
           onClick={handleWishlist}
           aria-label="Add to wishlist"
         >
@@ -67,9 +75,12 @@ export default function ProductCard({ product }) {
         </div>
 
         <Link to={`/product/${documentId}`} className="flex-grow">
-          <h3 className="text-sm sm:text-lg font-bold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors leading-snug">
+          <h3 className="text-sm sm:text-lg font-bold text-gray-900 mb-1 line-clamp-2 hover:text-blue-600 transition-colors leading-snug">
             {title}
           </h3>
+          {customizable && (
+            <p className="text-[11px] text-purple-500 font-medium mb-1">🎨 Upload Your Design</p>
+          )}
         </Link>
 
         <div className="flex items-center gap-2 mb-3 sm:mb-4 mt-auto">

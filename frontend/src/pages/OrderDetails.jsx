@@ -39,6 +39,48 @@ export default function OrderDetails() {
 
   if (!order) return null;
 
+
+  const getOrderStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+
+      case "confirmed":
+        return "bg-blue-100 text-blue-800";
+
+      case "processing":
+        return "bg-purple-100 text-purple-800";
+
+      case "shipped":
+        return "bg-indigo-100 text-indigo-800";
+
+      case "delivered":
+        return "bg-green-100 text-green-800";
+
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getPaymentStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "paid":
+        return "bg-green-100 text-green-800";
+
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+
+      case "failed":
+        return "bg-red-100 text-red-800";
+
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8 flex items-center gap-4">
@@ -77,7 +119,7 @@ export default function OrderDetails() {
           <h3 className="text-lg font-bold text-gray-900 mb-6">Items in your order</h3>
           <div className="space-y-6">
             {order.orderItems?.map((item, idx) => (
-              <div key={idx} className="flex gap-4">
+              <div key={idx} className="flex gap-4 min-w-0">
                 {item.previewImageUrl ? (
                   <img
                     src={
@@ -96,6 +138,7 @@ export default function OrderDetails() {
                         : `${import.meta.env.VITE_STRAPI_URL || "http://localhost:1337"}${item.productImage}`
                     }
                     alt={item.productName}
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover border border-gray-200 flex-shrink-0"
                   />
                 ) : (
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center">
@@ -103,7 +146,7 @@ export default function OrderDetails() {
                   </div>
                 )}
 
-                <div className="flex-1 flex flex-col justify-center">
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="font-semibold text-gray-900 line-clamp-2">{item.productName}</p>
@@ -167,13 +210,17 @@ export default function OrderDetails() {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-500 mb-1">Payment Status</p>
-              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-gray-100 text-gray-800">
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getPaymentStatusColor(order.paymentStatus)}`}
+              >
                 {order.paymentStatus}
               </span>
             </div>
             <div>
               <p className="text-sm text-gray-500 mb-1">Order Status</p>
-              <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-brand-50 text-brand-700">
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getOrderStatusColor(order.orderStatus)}`}
+              >
                 {order.orderStatus}
               </span>
             </div>

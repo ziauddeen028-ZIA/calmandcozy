@@ -85,12 +85,47 @@ function Field({ label, name, type = 'text', value, onChange, error, required, p
 function AddressFormModal({ initial, onSave, onCancel, isSaving }) {
   const [form, setForm] = useState(initial || EMPTY_FORM);
   const [errors, setErrors] = useState({});
+  const [pincodeLoading, setPincodeLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
+
+  // ── Auto-fill City & State from 6-digit Indian pincode ──────────────────────
+  useEffect(() => {
+    const pincode = form.pincode.trim();
+    if (!PINCODE_REGEX.test(pincode)) return;
+
+    let cancelled = false;
+    (async () => {
+      setPincodeLoading(true);
+      setErrors((prev) => ({ ...prev, pincode: undefined }));
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+        const data = await res.json();
+        if (cancelled) return;
+        const postOffice = data?.[0]?.PostOffice?.[0];
+        if (data?.[0]?.Status === 'Success' && postOffice) {
+          setForm((prev) => ({
+            ...prev,
+            city: postOffice.District || prev.city,
+            state: postOffice.State || prev.state,
+          }));
+        } else {
+          setErrors((prev) => ({ ...prev, pincode: 'Invalid pincode' }));
+        }
+      } catch {
+        if (!cancelled)
+          setErrors((prev) => ({ ...prev, pincode: 'Could not verify pincode' }));
+      } finally {
+        if (!cancelled) setPincodeLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [form.pincode]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -158,11 +193,38 @@ function AddressFormModal({ initial, onSave, onCancel, isSaving }) {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field
-              label="Pincode" name="pincode" required
-              value={form.pincode} onChange={handleChange}
-              error={errors.pincode} placeholder="6-digit pincode"
-            />
+            {/* Pincode with auto-lookup spinner */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Pincode <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  name="pincode"
+                  value={form.pincode}
+                  onChange={handleChange}
+                  placeholder="6-digit pincode"
+                  maxLength={6}
+                  className={`block w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 pr-8 ${
+                    errors.pincode ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                  }`}
+                />
+                {pincodeLoading && (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <svg className="animate-spin h-4 w-4 text-brand-500" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                  </span>
+                )}
+              </div>
+              {errors.pincode && (
+                <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
+                  <FiAlertCircle className="h-3 w-3" /> {errors.pincode}
+                </p>
+              )}
+            </div>
             <Field
               label="Country" name="country" required
               value={form.country} onChange={handleChange}

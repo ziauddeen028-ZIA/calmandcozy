@@ -120,11 +120,14 @@ export default function Cart() {
                       {product.category?.name || "Uncategorized"}
                     </span>
 
-                    {/* Customizations */}
-                    {(item.selectedColor || item.selectedSize || item.customText || item.uploadedImageUrl || item.previewImageUrl) && (
+                    {/* Customizations / Variant details */}
+                    {(item.variantSize || item.selectedColor || item.selectedSize || item.customText || item.uploadedImageUrl || item.previewImageUrl) && (
                       <div className="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded-md space-y-1">
                         {item.selectedColor && <p>Color: <span className="font-semibold">{item.selectedColor}</span></p>}
-                        {item.selectedSize && <p>Size: <span className="font-semibold">{item.selectedSize}</span></p>}
+                        {/* variantSize takes priority; fall back to selectedSize */}
+                        {(item.variantSize || item.selectedSize) && (
+                          <p>Size: <span className="font-semibold">{item.variantSize || item.selectedSize}</span></p>
+                        )}
                         {item.customText && <p>Text: <span className="font-semibold">{item.customText}</span></p>}
                         {item.previewImageUrl ? (
                           <div className="flex items-center gap-2 mt-1">

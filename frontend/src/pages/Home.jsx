@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import ProductGrid from '../components/ProductGrid';
-import { FiArrowRight, FiMail, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiArrowRight, FiMail, FiChevronLeft, FiChevronRight, FiShoppingBag } from 'react-icons/fi';
 import Banner from '../assets/Banner.jpeg';
 import Banner2 from '../assets/Banner2.png';
 import BannerMobile from '../assets/Banner Mobile.png';
@@ -81,6 +81,7 @@ export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [homepageFeaturedProduct, setHomepageFeaturedProduct] = useState(null);
 
   useEffect(() => {
     const fetchFeaturedProducts = async () => {
@@ -101,7 +102,22 @@ export default function Home() {
     fetchFeaturedProducts();
   }, []);
 
-  const featuredProduct = featuredProducts[0] || null;
+  const fetchHomepageFeaturedProduct = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_STRAPI_URL}/api/products?filters[homepageFeatured][$eq]=true&populate=*`
+      );
+
+      setHomepageFeaturedProduct(response.data.data?.[0] || null);
+    } catch (error) {
+      console.error("Error fetching homepage featured product:", error);
+    }
+  };
+
+  useEffect(() => {
+  fetchHomepageFeaturedProduct();
+}, []);
+
 
   useEffect(() => {
     if (isPaused) return;
@@ -132,16 +148,14 @@ export default function Home() {
         {heroSlides.map((slide, index) => (
           <div
             key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
-            }`}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
+              }`}
           >
             <div
-              className={`absolute inset-0 z-10 ${
-                index === 0
-                  ? 'bg-black/20'
-                  : 'bg-gradient-to-b from-black/40 via-black/20 to-black/60'
-              }`}
+              className={`absolute inset-0 z-10 ${index === 0
+                ? 'bg-black/20'
+                : 'bg-gradient-to-b from-black/40 via-black/20 to-black/60'
+                }`}
             />
             <img
               src={
@@ -192,6 +206,7 @@ export default function Home() {
                 to="/shop"
                 className="inline-flex items-center justify-center px-8 sm:px-10 py-3 sm:py-4 text-sm sm:text-base font-semibold text-gray-900 bg-white hover:bg-gray-100 rounded-full transition-all hover:-translate-y-0.5 shadow-xl"
               >
+                <FiShoppingBag className="h-4 w-4 mr-2" />
                 Shop Collection
               </Link>
             </motion.div>
@@ -204,11 +219,10 @@ export default function Home() {
             <button
               key={index}
               onClick={() => setCurrentSlide(index)}
-              className={`h-2 sm:h-2.5 rounded-full transition-all duration-300 ${
-                index === currentSlide
-                  ? 'w-6 sm:w-8 bg-white'
-                  : 'w-2 sm:w-2.5 bg-white/50 hover:bg-white/80'
-              }`}
+              className={`h-2 sm:h-2.5 rounded-full transition-all duration-300 ${index === currentSlide
+                ? 'w-6 sm:w-8 bg-white'
+                : 'w-2 sm:w-2.5 bg-white/50 hover:bg-white/80'
+                }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
@@ -224,7 +238,7 @@ export default function Home() {
           <div className="w-14 sm:w-16 h-0.5 bg-blue-600 mx-auto mt-3 sm:mt-4 rounded-full" />
         </div>
 
-        <div className="flex overflow-x-auto pb-6 sm:pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 hide-scrollbar gap-5 sm:gap-6 md:gap-8 justify-start lg:justify-center">
+        <div className="grid grid-cols-3 lg:flex gap-5 sm:gap-6 md:gap-8 justify-items-center lg:justify-center">
           {categories.map((category, index) => (
             <motion.div
               key={category.name}
@@ -232,7 +246,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.08 }}
-              className="flex flex-col items-center flex-shrink-0 group cursor-pointer"
+              className="group cursor-pointer flex flex-col items-center"
             >
               <Link
                 to={category.link}
@@ -245,7 +259,8 @@ export default function Home() {
                 />
                 <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
               </Link>
-              <h3 className="text-xs sm:text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors text-center w-24 sm:w-full">
+
+              <h3 className="text-xs sm:text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors text-center">
                 {category.name}
               </h3>
             </motion.div>
@@ -298,15 +313,7 @@ export default function Home() {
       <section className="py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-blue-900 rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl min-h-[380px] sm:min-h-[400px]">
-            {loading ? (
-              <div className="flex items-center justify-center h-full min-h-[380px]">
-                <div className="text-white text-lg">Loading featured product...</div>
-              </div>
-            ) : error ? (
-              <div className="flex items-center justify-center h-full min-h-[380px]">
-                <div className="text-red-300 text-lg">{error}</div>
-              </div>
-            ) : !featuredProduct ? (
+            {!homepageFeaturedProduct ? (
               <div className="flex items-center justify-center h-full min-h-[380px]">
                 <div className="text-white text-lg">No featured product currently available.</div>
               </div>
@@ -318,28 +325,28 @@ export default function Home() {
                     Featured Essential
                   </div>
                   <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 leading-tight">
-                    {featuredProduct.title}
+                    {homepageFeaturedProduct.title}
                   </h2>
                   <p className="text-blue-100 text-sm sm:text-lg mb-6 sm:mb-8 max-w-md leading-relaxed line-clamp-3">
-                    {featuredProduct.description}
+                    {homepageFeaturedProduct.description}
                   </p>
                   <div>
                     <Link
-                      to={`/product/${featuredProduct.documentId}`}
+                      to={`/product/${homepageFeaturedProduct.documentId}`}
                       className="inline-flex items-center justify-center px-7 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-blue-900 bg-white hover:bg-gray-100 rounded-full shadow-lg transition-all hover:-translate-y-0.5"
                     >
-                      Shop Now — ₹{featuredProduct.sellingPrice}
+                      Shop Now — ₹{homepageFeaturedProduct.sellingPrice}
                     </Link>
                   </div>
                 </div>
 
                 {/* Image Side */}
-                <div className="relative h-56 sm:h-80 lg:h-auto bg-blue-800/30">
+
+                <div className="relative min-h-[500px] bg-white">
                   <img
-                    src={`${import.meta.env.VITE_STRAPI_URL}${featuredProduct.images?.[0]?.url}`}
-                    alt={featuredProduct.title}
-                    className="absolute inset-0 w-full h-full object-cover object-center"
-                    loading="lazy"
+                    src={homepageFeaturedProduct?.images?.[0]?.url}
+                    alt={homepageFeaturedProduct.title}
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                 </div>
               </div>

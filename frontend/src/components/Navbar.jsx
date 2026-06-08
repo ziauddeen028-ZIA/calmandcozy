@@ -85,14 +85,14 @@ export default function Navbar() {
 
             <Link
               to="/"
-              className="text-gray-700 hover:text-brand-600 font-medium transition-colors"
+              className="text-gray-900 hover:text-brand-600 font-medium transition-colors"
             >
               Home
             </Link>
 
             <Link
               to="/shop"
-              className="text-gray-700 hover:text-brand-600 font-medium transition-colors"
+              className="text-gray-900 hover:text-brand-600 font-medium transition-colors"
             >
               Shop
             </Link>
@@ -100,7 +100,7 @@ export default function Navbar() {
             {/* Categories */}
             <div className="relative group pb-2">
 
-              <button className="text-gray-700 hover:text-brand-600 font-medium transition-colors flex items-center">
+              <button className="text-gray-900 hover:text-brand-600 font-medium transition-colors flex items-center">
                 Categories
                 <FiChevronDown className="ml-1 h-4 w-4" />
               </button>
@@ -110,7 +110,7 @@ export default function Navbar() {
 
                 <Link
                   to="/shop?category=t-shirt-customize"
-                  className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-brand-600"
+                  className="block px-4 py-3 text-sm text-gray-900 hover:bg-gray-50 hover:text-brand-600"
                 >
                   T-Shirt Customize
                 </Link>
@@ -122,7 +122,7 @@ export default function Navbar() {
                 >
                   <Link
                     to="/shop?category=t-shirts"
-                    className="flex items-center justify-between px-4 py-3 text-sm text-gray-700 hover:bg-gray-50"
+                    className="flex items-center justify-between px-4 py-3 text-sm text-gray-900 hover:bg-gray-50"
                   >
                     T-Shirts
                     <FiChevronDown className="h-3 w-3 -rotate-90" />
@@ -151,28 +151,28 @@ export default function Navbar() {
 
                 <Link
                   to="/shop?category=oversized-t-shirts"
-                  className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-brand-600"
+                  className="block px-4 py-3 text-sm text-gray-900 hover:bg-gray-50 hover:text-brand-600"
                 >
                   Oversized
                 </Link>
 
                 <Link
                   to="/shop?category=mugs"
-                  className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-brand-600"
+                  className="block px-4 py-3 text-sm text-gray-900 hover:bg-gray-50 hover:text-brand-600"
                 >
                   Mug
                 </Link>
 
                 <Link
                   to="/shop?category=mouse-pad"
-                  className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-brand-600"
+                  className="block px-4 py-3 text-sm text-gray-900 hover:bg-gray-50 hover:text-brand-600"
                 >
                   Mouse Pad
                 </Link>
 
                 <Link
                   to="/shop?category=desk-pad"
-                  className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 hover:text-brand-600"
+                  className="block px-4 py-3 text-sm text-gray-900 hover:bg-gray-50 hover:text-brand-600"
                 >
                   Desk Pad
                 </Link>
@@ -191,7 +191,7 @@ export default function Navbar() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full bg-gray-50 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 text-sm"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-400 rounded-full bg-gray-50 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500 text-sm"
                 placeholder="Search products..."
               />
             </form>
@@ -203,7 +203,7 @@ export default function Navbar() {
               <>
                 <Link
                   to="/wishlist"
-                  className="text-gray-500 hover:text-brand-600 transition-colors relative"
+                  className="text-gray-600 hover:text-brand-600 transition-colors relative"
                 >
                   <FiHeart className="h-6 w-6" />
                   {wishlistCount > 0 && (
@@ -215,7 +215,7 @@ export default function Navbar() {
 
                 <Link
                   to="/cart"
-                  className="text-gray-500 hover:text-brand-600 transition-colors relative"
+                  className="text-gray-600 hover:text-brand-600 transition-colors relative"
                 >
                   <FiShoppingCart className="h-6 w-6" />
 
@@ -226,17 +226,11 @@ export default function Navbar() {
                   )}
                 </Link>
 
-                <Link
-                  to="/addresses"
-                  className="text-gray-500 hover:text-brand-600 transition-colors"
-                  title="My Addresses"
-                >
-                  <FiMapPin className="h-6 w-6" />
-                </Link>
+
 
                 <Link
                   to="/profile"
-                  className="text-gray-500 hover:text-brand-600 transition-colors"
+                  className="text-gray-600 hover:text-brand-600 transition-colors"
                   title="My Profile"
                 >
                   {customer?.avatar_letter ? (
@@ -248,7 +242,7 @@ export default function Navbar() {
 
                 <button
                   onClick={handleLogout}
-                  className="text-gray-500 hover:text-brand-600 transition-colors"
+                  className="text-gray-600 hover:text-brand-600 transition-colors"
                   title="Logout"
                 >
                   <FiLogOut className="h-6 w-6" />
@@ -286,7 +280,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/wishlist"
-                  className="text-gray-500 hover:text-brand-600 transition-colors relative"
+                  className="text-gray-600 hover:text-brand-600 transition-colors relative"
                 >
                   <FiHeart className="h-6 w-6" />
                   {wishlistCount > 0 && (
@@ -297,7 +291,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/cart"
-                  className="text-gray-500 hover:text-brand-600 transition-colors relative"
+                  className="text-gray-600 hover:text-brand-600 transition-colors relative"
                 >
                   <FiShoppingCart className="h-6 w-6" />
                   {cartTotalItems > 0 && (
@@ -312,7 +306,7 @@ export default function Navbar() {
               onClick={() =>
                 setIsMobileMenuOpen(!isMobileMenuOpen)
               }
-              className="text-gray-500 hover:text-brand-600"
+              className="text-gray-600 hover:text-brand-600"
             >
               <FiMenu className="h-7 w-7" />
             </button>
@@ -513,7 +507,7 @@ export default function Navbar() {
                     <Link
                       to="/wishlist"
                       onClick={closeMenus}
-                      className="text-gray-500 hover:text-brand-600 flex flex-col items-center relative"
+                      className="text-gray-600 hover:text-brand-600 flex flex-col items-center relative"
                     >
                       <div className="relative">
                         <FiHeart className="h-6 w-6 mb-1" />
@@ -529,7 +523,7 @@ export default function Navbar() {
                     <Link
                       to="/cart"
                       onClick={closeMenus}
-                      className="text-gray-500 hover:text-brand-600 flex flex-col items-center relative"
+                      className="text-gray-600 hover:text-brand-600 flex flex-col items-center relative"
                     >
                       <div className="relative">
                         <FiShoppingCart className="h-6 w-6 mb-1" />
@@ -545,7 +539,7 @@ export default function Navbar() {
                     <Link
                       to="/addresses"
                       onClick={closeMenus}
-                      className="text-gray-500 hover:text-brand-600 flex flex-col items-center"
+                      className="text-gray-600 hover:text-brand-600 flex flex-col items-center"
                     >
                       <FiMapPin className="h-6 w-6 mb-1" />
                       <span className="text-xs">Address</span>
@@ -554,7 +548,7 @@ export default function Navbar() {
                     <Link
                       to="/profile"
                       onClick={closeMenus}
-                      className="text-gray-500 hover:text-brand-600 flex flex-col items-center"
+                      className="text-gray-600 hover:text-brand-600 flex flex-col items-center"
                     >
                       {customer?.avatar_letter ? (
                         <AvatarCircle letter={customer.avatar_letter} size="sm" />
@@ -566,7 +560,7 @@ export default function Navbar() {
 
                     <button
                       onClick={handleLogout}
-                      className="text-gray-500 hover:text-brand-600 flex flex-col items-center"
+                      className="text-gray-600 hover:text-brand-600 flex flex-col items-center"
                     >
                       <FiLogOut className="h-6 w-6 mb-1" />
                       <span className="text-xs">Logout</span>
