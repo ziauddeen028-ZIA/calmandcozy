@@ -150,7 +150,7 @@ export default function OrderDetails() {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="font-semibold text-gray-900 line-clamp-2">{item.productName}</p>
-                      {(item.selectedColor || item.selectedSize || item.customText || item.uploadedImageUrl) && (
+                      {(item.selectedColor || item.selectedSize || item.customText || item.uploadedImageUrl || item.backImageUrl || item.logoPosition || item.specialInstructions) && (
                         <div className="mt-2 mb-1 text-xs text-gray-600 bg-gray-50 p-2 rounded-md space-y-1 inline-block">
                           {item.selectedColor && <p>Color: <span className="font-semibold">{item.selectedColor}</span></p>}
                           {item.selectedSize && <p>Size: <span className="font-semibold">{item.selectedSize}</span></p>}
@@ -169,6 +169,22 @@ export default function OrderDetails() {
                               />
                             </div>
                           )}
+                          {item.backImageUrl && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span>Back Image:</span>
+                              <img
+                                src={
+                                  item.backImageUrl.startsWith("http")
+                                    ? item.backImageUrl
+                                    : `${import.meta.env.VITE_STRAPI_URL || "http://localhost:1337"}${item.backImageUrl}`
+                                }
+                                alt="Back Custom"
+                                className="h-8 w-8 object-cover rounded border border-gray-200 bg-white"
+                              />
+                            </div>
+                          )}
+                          {item.logoPosition && <p>Logo Position: <span className="font-semibold">{item.logoPosition}</span></p>}
+                          {item.specialInstructions && <p>Special Instructions: <span className="font-semibold">{item.specialInstructions}</span></p>}
                         </div>
                       )}
                       <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>

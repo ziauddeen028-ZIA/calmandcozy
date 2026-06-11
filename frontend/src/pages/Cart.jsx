@@ -125,7 +125,7 @@ export default function Cart() {
                     </span>
 
                     {/* Customizations / Variant details */}
-                    {(item.variantSize || item.selectedColor || item.selectedSize || item.customText || item.uploadedImageUrl || item.previewImageUrl) && (
+                    {(item.variantSize || item.selectedColor || item.selectedSize || item.customText || item.uploadedImageUrl || item.previewImageUrl || item.backImageUrl || item.logoPosition || item.specialInstructions) && (
                       <div className="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded-md space-y-1">
                         {item.selectedColor && <p>Color: <span className="font-semibold">{item.selectedColor}</span></p>}
                         {/* variantSize takes priority; fall back to selectedSize */}
@@ -160,6 +160,22 @@ export default function Cart() {
                             />
                           </div>
                         )}
+                        {item.backImageUrl && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span>Back Image:</span>
+                            <img
+                              src={
+                                item.backImageUrl?.startsWith("http")
+                                  ? item.backImageUrl
+                                  : `${STRAPI_URL}${item.backImageUrl}`
+                              }
+                              alt="Back Custom"
+                              className="h-8 w-8 object-cover rounded border border-gray-200 bg-white"
+                            />
+                          </div>
+                        )}
+                        {item.logoPosition && <p>Logo Position: <span className="font-semibold">{item.logoPosition}</span></p>}
+                        {item.specialInstructions && <p>Special Instructions: <span className="font-semibold">{item.specialInstructions}</span></p>}
                       </div>
                     )}
 

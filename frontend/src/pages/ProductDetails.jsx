@@ -42,14 +42,19 @@ export default function ProductDetails() {
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [customText, setCustomText] = useState('');
+  const [logoPosition, setLogoPosition] = useState('Center');
+  const [specialInstructions, setSpecialInstructions] = useState('');
   const [uploadedImageFile, setUploadedImageFile] = useState(null);
   const [uploadedImagePreview, setUploadedImagePreview] = useState(null);
+  const [backImageFile, setBackImageFile] = useState(null);
+  const [backImagePreview, setBackImagePreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
   // Variant-based selection (for non-customizable apparel with variants)
   const [selectedVariant, setSelectedVariant] = useState(null);
 
   const fileInputRef = useRef(null);
+  const backFileInputRef = useRef(null);
 
   useEffect(() => {
     if (selectedColor !== '') {
@@ -64,24 +69,28 @@ export default function ProductDetails() {
   }, [selectedSize, id]);
 
   const handleColorChange = (color) => {
+
     setSelectedColor(color);
-    if (product?.images) {
-      const exactFileName = `${color.toLowerCase()}.png`;
-      const colorName = color.toLowerCase();
+    console.log("Selected Color:", color);
+    if (product?.customizationType !== 't-shirt') {
+      if (product?.images) {
+        const exactFileName = `${color.toLowerCase()}.png`;
+        const colorName = color.toLowerCase();
 
-      const colorImage = product.images.find(img => {
-        const imgName = img.name ? img.name.toLowerCase() : '';
-        const imgUrl = img.url ? img.url.toLowerCase() : '';
+        const colorImage = product.images.find(img => {
+          const imgName = img.name ? img.name.toLowerCase() : '';
+          const imgUrl = img.url ? img.url.toLowerCase() : '';
 
-        return imgName === exactFileName ||
-          imgName.startsWith(colorName + '_') ||
-          imgName === colorName ||
-          imgUrl.includes(exactFileName) ||
-          imgUrl.includes(`/${colorName}_`);
-      });
+          return imgName === exactFileName ||
+            imgName.startsWith(colorName + '_') ||
+            imgName === colorName ||
+            imgUrl.includes(exactFileName) ||
+            imgUrl.includes(`/${colorName}_`);
+        });
 
-      if (colorImage) {
-        setActiveImage(colorImage.url);
+        if (colorImage) {
+          setActiveImage(colorImage.url);
+        }
       }
     }
   };
@@ -89,23 +98,21 @@ export default function ProductDetails() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await api.get(`/products/${id}?populate=*`);
+        const response = await api.get(`/products/${id}?populate[0]=images&populate[1]=category&populate[2]=variants&populate[3]=colorVariants.frontImage&populate[4]=colorVariants.backImage`);
+        console.log(response.data.data);
         const productData = response.data.data;
         setProduct(productData);
+        console.log(productData.colorVariants);
+        if (productData.colorVariants?.length > 0) {
+          setSelectedColor(productData.colorVariants[0].colorName);
+        }
         const savedColor = localStorage.getItem(`color_${id}`);
         const savedSize = localStorage.getItem(`size_${id}`);
 
         if (savedColor) {
           setSelectedColor(savedColor);
-
-          const colorImage = productData.images?.find(img => {
-            const imgName = img.name?.toLowerCase() || '';
-            return imgName.includes(savedColor.toLowerCase());
-          });
-
-          if (colorImage) {
-            setActiveImage(colorImage.url);
-          }
+        } else if (productData.colorVariants?.length > 0) {
+          setSelectedColor(productData.colorVariants[0].colorName);
         } else if (productData?.images?.length > 0) {
           setActiveImage(
             productData.images?.[1]?.url ||
@@ -141,10 +148,13 @@ export default function ProductDetails() {
   const handleRemoveImage = () => {
     setUploadedImageFile(null);
     setUploadedImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+  const handleRemoveBackImage = () => {
+    setBackImageFile(null);
+    setBackImagePreview(null);
+    if (backFileInputRef.current) backFileInputRef.current.value = '';
   };
 
   const generatePreviewCanvas = async (tshirtUrl, logoUrl, text) => {
@@ -246,8 +256,15 @@ export default function ProductDetails() {
 
     if (product.customizable) {
       if (product.customizationType === 't-shirt') {
-        if (!selectedColor && product.availableColors?.length > 0) return toast.error('Please select a color');
+        if (!selectedColor && product.colorVariants?.length > 0) return toast.error('Please select a color');
         if (!selectedSize && product.availableSizes?.length > 0) return toast.error('Please select a size');
+        if (!uploadedImageFile) {
+          return toast.error("Please upload front design");
+        }
+
+        if (!backImageFile) {
+          return toast.error("Please upload back design");
+        }
       }
       if (product.customizationType === 'mug') {
         if (!selectedColor && product.availableColors?.length > 0) {
@@ -260,10 +277,11 @@ export default function ProductDetails() {
       }
 
       let uploadedImageUrl = null;
+      let backImageUrl = null;
       let previewImageUrl = null;
       let previewImageId = null;
 
-      if (uploadedImageFile || customText) {
+      if (uploadedImageFile || backImageFile || customText) {
         setIsUploading(true);
         try {
           if (uploadedImageFile) {
@@ -274,10 +292,29 @@ export default function ProductDetails() {
             });
             uploadedImageUrl = uploadRes.data[0].url;
           }
+          if (backImageFile) {
+            const formData = new FormData();
+            formData.append('files', backImageFile);
 
-          if (activeImage) {
+            const uploadRes = await api.post('/upload', formData, {
+              headers: { 'Content-Type': 'multipart/form-data' },
+            });
+
+            backImageUrl = uploadRes.data[0].url;
+          }
+
+          const variant = product.colorVariants?.find(
+            v =>
+              v.colorName?.trim().toLowerCase() ===
+              selectedColor?.trim().toLowerCase()
+          );
+          const frontImg = variant?.frontImage?.url;
+          console.log("selectedColor", selectedColor);
+          console.log("variant", variant);
+
+          if (frontImg) {
             const previewBlob = await generatePreviewCanvas(
-              getImageUrl(activeImage),
+              getImageUrl(frontImg),
               uploadedImagePreview,
               customText
             );
@@ -305,9 +342,15 @@ export default function ProductDetails() {
         selectedColor,
         selectedSize,
         customText,
+
         uploadedImageUrl,
+        backImageUrl,
+
         previewImageUrl,
         previewImageId,
+
+        logoPosition,
+        specialInstructions,
       };
 
       addToCart(product.documentId, 1, customization);
@@ -374,120 +417,271 @@ export default function ProductDetails() {
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-        {/* Image Gallery */}
-        <div className="flex flex-col-reverse sm:flex-row gap-4">
-          {/* Thumbnails */}
-          {galleryImages.length > 0 && (
-            <div className="flex sm:flex-col gap-4 overflow-x-auto sm:overflow-y-auto sm:w-24 shrink-0 no-scrollbar">
-              {galleryImages.map((img) => (
-                <button
-                  key={img.id}
-                  onClick={() => {
-                    setActiveImage(img.url);
+        {/* ── T-shirt dual-preview layout ── */}
+        {product.customizable && product.customizationType === 't-shirt' ? (
+          <div className="flex flex-col gap-6">
+            {/* Front Design Card */}
+            <div className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-white">
+              <div className="px-5 pt-4 pb-2">
+                <span className="text-xs font-bold uppercase tracking-widest text-indigo-600">Front Design</span>
+              </div>
 
-                    const imgName = img.name?.toLowerCase() || '';
+              {/* Front Preview */}
+              <div className="relative flex items-center justify-center bg-gray-50 mx-4 rounded-xl overflow-hidden" style={{ minHeight: '260px' }}>
+                {(() => {
+                  const variant = product.colorVariants?.find(
+                    v =>
+                      v.colorName?.trim().toLowerCase() ===
+                      selectedColor?.trim().toLowerCase()
+                  );
+                  const frontImg = variant?.frontImage?.url || activeImage;
+                  return frontImg ? (
+                    <img
+                      src={getImageUrl(frontImg)}
+                      alt={title}
+                      className="w-full object-contain p-4 transition-all"
+                      style={{ maxHeight: '300px' }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center text-gray-400 h-64">No Image</div>
+                  );
+                })()}
+                {/* Front overlay */}
+                {uploadedImagePreview && (
+                  <div className="absolute flex flex-col items-center justify-center pointer-events-none"
+                    style={
+                      logoPosition === 'Left Chest'
+                        ? {
+                          top: '30%',
+                          left: window.innerWidth < 768 ? '57%' : '52%',
+                          width: window.innerWidth < 768 ? '12%' : '9%',
+                          height: window.innerWidth < 768 ? '12%' : '9%',
+                        }
+                        : logoPosition === 'Right Chest'
+                          ? {
+                            top: '30%',
+                            left: window.innerWidth < 768 ? '32%' : '40%',
+                            width: window.innerWidth < 768 ? '12%' : '9%',
+                            height: window.innerWidth < 768 ? '12%' : '9%',
+                          } : {
+                            top: '30%',
+                            left: '35%',
+                            width: '30%',
+                            height: '30%',
+                          }
+                    }>
+                    <img
+                      src={uploadedImagePreview}
+                      alt="Front design"
+                      className="w-full h-full object-contain drop-shadow-sm"
+                    />
+                    {customText && (
+                      <span
+                        className="text-xl font-black text-center drop-shadow-md whitespace-pre-wrap max-w-full break-words leading-tight mt-1"
+                        style={{ color: '#111827' }}
+                      >
+                        {customText}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {!uploadedImagePreview && customText && (
+                  <div className="absolute flex flex-col items-center justify-center pointer-events-none"
+                    style={
+                      logoPosition === 'Left Chest'
+                        ? { top: '25%', left: '55%', width: '25%', height: '25%' }
+                        : logoPosition === 'Right Chest'
+                          ? { top: '25%', left: '20%', width: '25%', height: '25%' }
+                          : { top: '25%', left: '25%', width: '50%', height: '50%' }
+                    }>
+                    <span
+                      className="text-xl font-black text-center drop-shadow-md whitespace-pre-wrap max-w-full break-words leading-tight"
+                      style={{ color: '#111827' }}
+                    >
+                      {customText}
+                    </span>
+                  </div>
+                )}
+              </div>
 
-                    if (imgName.includes('blue')) {
-                      setSelectedColor('Blue');
-                    } else if (imgName.includes('red')) {
-                      setSelectedColor('Red');
-                    } else if (imgName.includes('green')) {
-                      setSelectedColor('Green');
-                    } else if (imgName.includes('white')) {
-                      setSelectedColor('White');
-                    } else if (imgName.includes('black')) {
-                      setSelectedColor('Black');
+              {/* Front Upload */}
+              <div className="px-4 py-4">
+                <input
+                  ref={fileInputRef}
+                  id="front-upload-input"
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                />
+                {uploadedImageFile ? (
+                  <div className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-2.5">
+                    <span className="text-sm text-indigo-700 font-medium truncate max-w-[70%]">{uploadedImageFile.name}</span>
+                    <button
+                      type="button"
+                      id="front-remove-btn"
+                      onClick={handleRemoveImage}
+                      className="text-red-500 hover:text-red-700 font-bold text-lg leading-none ml-2 flex-shrink-0"
+                      title="Remove front design"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <label
+                    htmlFor="front-upload-input"
+                    className="flex items-center justify-center gap-3 w-full py-3 border-2 border-dashed border-indigo-300 rounded-xl cursor-pointer bg-indigo-50 hover:bg-indigo-100 transition-colors text-indigo-600 font-semibold text-sm"
+                  >
+                    <FiUpload className="w-5 h-5" />
+                    Upload Front Design
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {/* Back Design Card */}
+            <div className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-white">
+              <div className="px-5 pt-4 pb-2">
+                <span className="text-xs font-bold uppercase tracking-widest text-indigo-600">Back Design</span>
+              </div>
+
+              {/* Back Preview */}
+              <div className="relative flex items-center justify-center bg-gray-50 mx-4 rounded-xl overflow-hidden" style={{ minHeight: '260px' }}>
+                {(() => {
+                  const variant = product.colorVariants?.find(
+                    v =>
+                      v.colorName?.trim().toLowerCase() ===
+                      selectedColor?.trim().toLowerCase()
+                  );
+                  const backImg = variant?.backImage?.url;
+                  return backImg ? (
+                    <img
+                      src={getImageUrl(backImg)}
+                      alt={title}
+                      className="w-full object-contain p-4 transition-all"
+                      style={{ maxHeight: '300px' }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center text-gray-400 h-64">No Image</div>
+                  );
+                })()}
+                {/* Back overlay */}
+                {backImagePreview && (
+                  <div className="absolute flex flex-col items-center justify-center pointer-events-none"
+                    style={{ top: '25%', left: '25%', width: '50%', height: '50%' }}>
+                    <img
+                      src={backImagePreview}
+                      alt="Back design"
+                      className="max-w-full max-h-full object-contain drop-shadow-sm"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Back Upload */}
+              <div className="px-4 py-4">
+                <input
+                  ref={backFileInputRef}
+                  id="back-upload-input"
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      setBackImageFile(file);
+                      setBackImagePreview(URL.createObjectURL(file));
                     }
                   }}
-                  className={`relative w-20 h-20 sm:w-full sm:h-24 rounded-lg overflow-hidden border-2 transition-colors ${activeImage === img.url
-                    ? 'border-indigo-600'
-                    : 'border-transparent hover:border-gray-300'
-                    }`}
-                >
-                  <img
-                    src={getImageUrl(img.url)}
-                    alt={title}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
+                />
+                {backImageFile ? (
+                  <div className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-2.5">
+                    <span className="text-sm text-indigo-700 font-medium truncate max-w-[70%]">{backImageFile.name}</span>
+                    <button
+                      type="button"
+                      id="back-remove-btn"
+                      onClick={handleRemoveBackImage}
+                      className="text-red-500 hover:text-red-700 font-bold text-lg leading-none ml-2 flex-shrink-0"
+                      title="Remove back design"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <label
+                    htmlFor="back-upload-input"
+                    className="flex items-center justify-center gap-3 w-full py-3 border-2 border-dashed border-indigo-300 rounded-xl cursor-pointer bg-indigo-50 hover:bg-indigo-100 transition-colors text-indigo-600 font-semibold text-sm"
+                  >
+                    <FiUpload className="w-5 h-5" />
+                    Upload Back Design
+                  </label>
+                )}
+              </div>
             </div>
-          )}
-
-          {/* Main Image with Live Preview */}
-          <div
-            className="relative w-full h-full rounded-2xl overflow-hidden flex items-start justify-center bg-gray-50"
-          >
-            {activeImage ? (
-              <img
-                src={getImageUrl(activeImage)}
-                alt={title}
-                className="w-full h-full object-contain transition-all p-4"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                No Image
-              </div>
-            )}
-
-            {/* Live Preview Overlay */}
-            {product.customizable && (
-              <div className="absolute flex flex-col items-center justify-center pointer-events-none"
-                style={{
-                  top: product.customizationType === 't-shirt' ? '25%' : product.customizationType === 'mug' ? '15%' : '15%',
-                  left: product.customizationType === 't-shirt' ? '25%' : product.customizationType === 'mug' ? '12%' : '15%',
-                  width: product.customizationType === 't-shirt' ? '50%' : product.customizationType === 'mug' ? '65%' : '70%',
-                  height: product.customizationType === 't-shirt' ? '50%' : product.customizationType === 'mug' ? '70%' : '70%'
-                }}>
-                {/* T-Shirt Preview */}
-                {product.customizationType === "t-shirt" && (
-                  <>
-                    {uploadedImagePreview && (
-                      <img
-                        src={uploadedImagePreview}
-                        alt="Custom"
-                        className="max-w-full max-h-[60%] object-contain mb-2 drop-shadow-sm"
-                      />
-                    )}
-
-                    {customText && (
-                      <span
-                        className="text-2xl sm:text-3xl font-black text-center drop-shadow-md whitespace-pre-wrap max-w-full break-words leading-tight"
-                        style={{ color: "#111827" }}
-                      >
-                        {customText}
-                      </span>
-                    )}
-                  </>
-                )}
-
-                {/* Mug Preview */}
-                {product.customizationType === "mug" && (
-                  <>
-                    {uploadedImagePreview && (
-                      <img
-                        src={uploadedImagePreview}
-                        alt="Custom"
-                        className="max-w-full max-h-[80%] object-contain drop-shadow-sm"
-                      />
-                    )}
-
-                    {customText && (
-                      <span
-                        className="text-lg font-bold text-center mt-2"
-                        style={{
-                          color: selectedColor === "Black" ? "#ffffff" : "#111827"
-                        }}
-                      >
-                        {customText}
-                      </span>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
           </div>
-        </div>
+        ) : (
+          /* ── Original gallery layout for all other product types ── */
+          <div className="flex flex-col-reverse sm:flex-row gap-4">
+            {/* Thumbnails */}
+            {galleryImages.length > 0 && (
+              <div className="flex sm:flex-col gap-4 overflow-x-auto sm:overflow-y-auto sm:w-24 shrink-0 no-scrollbar">
+                {galleryImages.map((img) => (
+                  <button
+                    key={img.id}
+                    onClick={() => {
+                      setActiveImage(img.url);
+                      const imgName = img.name?.toLowerCase() || '';
+                      if (imgName.includes('blue')) setSelectedColor('Blue');
+                      else if (imgName.includes('red')) setSelectedColor('Red');
+                      else if (imgName.includes('green')) setSelectedColor('Green');
+                      else if (imgName.includes('white')) setSelectedColor('White');
+                      else if (imgName.includes('black')) setSelectedColor('Black');
+                    }}
+                    className={`relative w-20 h-20 sm:w-full sm:h-24 rounded-lg overflow-hidden border-2 transition-colors ${activeImage === img.url ? 'border-indigo-600' : 'border-transparent hover:border-gray-300'
+                      }`}
+                  >
+                    <img src={getImageUrl(img.url)} alt={title} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Main Image with Live Preview */}
+            <div className="relative w-full h-full rounded-2xl overflow-hidden flex items-start justify-center bg-gray-50">
+              {activeImage ? (
+                <img
+                  src={getImageUrl(activeImage)}
+                  alt={title}
+                  className="w-full h-full object-contain transition-all p-4"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
+              )}
+
+              {/* Live Preview Overlay — mug only */}
+              {product.customizable && product.customizationType === 'mug' && (
+                <div className="absolute flex flex-col items-center justify-center pointer-events-none"
+                  style={{ top: '15%', left: '12%', width: '65%', height: '70%' }}>
+                  {uploadedImagePreview && (
+                    <img
+                      src={uploadedImagePreview}
+                      alt="Custom"
+                      className="max-w-full max-h-[80%] object-contain drop-shadow-sm"
+                    />
+                  )}
+                  {customText && (
+                    <span
+                      className="text-lg font-bold text-center mt-2"
+                      style={{ color: selectedColor === 'Black' ? '#ffffff' : '#111827' }}
+                    >
+                      {customText}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Product Info */}
         <div className="flex flex-col pt-0">
@@ -613,115 +807,149 @@ export default function ProductDetails() {
             </div>
           )}
 
-          {/* ── Customizable product options (unchanged) ── */}
+          {/* ── Customizable product options ── */}
           {product.customizable && (
             <div className="mb-8 space-y-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
               <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2">Customize your {product.customizationType}</h3>
 
-              {product.customizationType === 't-shirt' && product.availableColors && (
+              {/* Color selector — t-shirt */}
+              {product.customizationType === 't-shirt' && product.colorVariants?.length > 0 && (
                 <div>
                   <span className="block text-sm font-medium text-gray-700 mb-2">Color</span>
+                  <div className="flex gap-2">
+                    {product.colorVariants.map(variant => (
+                      <button
+                        key={variant.colorName}
+                        onClick={() => handleColorChange(variant.colorName)}
+                        className={`w-8 h-8 rounded-full border-2 ${selectedColor === variant.colorName ? 'border-indigo-600 ring-2 ring-indigo-600 ring-offset-2' : 'border-gray-300'}`}
+                        style={{ backgroundColor: variant.colorName.toLowerCase() }}
+                        title={variant.colorName}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Color selector — mug */}
+              {product.customizationType === 'mug' && product.availableColors && (
+                <div>
+                  <span className="block text-sm font-medium text-gray-700 mb-2">Mug Color</span>
                   <div className="flex gap-2">
                     {product.availableColors.map(color => (
                       <button
                         key={color}
                         onClick={() => handleColorChange(color)}
                         className={`w-8 h-8 rounded-full border-2 ${selectedColor === color ? 'border-indigo-600 ring-2 ring-indigo-600 ring-offset-2' : 'border-gray-300'}`}
-                        style={{ backgroundColor: color.toLowerCase() }}
+                        style={{ backgroundColor: color.toLowerCase() === 'brown' ? '#8B4513' : color.toLowerCase() }}
                         title={color}
                       />
                     ))}
                   </div>
                 </div>
               )}
-              {product.customizationType === 'mug' && product.availableColors && (
+
+              {/* Size selector — t-shirt */}
+              {product.customizationType === 't-shirt' && product.availableSizes?.length > 0 && (
                 <div>
-                  <span className="block text-sm font-medium text-gray-700 mb-2">
-                    Mug Color
-                  </span>
-
-                  <div className="flex gap-2">
-                    {product.availableColors.map(color => (
+                  <span className="block text-sm font-medium text-gray-700 mb-2">Size</span>
+                  <div className="flex gap-2 flex-wrap">
+                    {product.availableSizes.map((size) => (
                       <button
-                        key={color}
-                        onClick={() => handleColorChange(color)}
-                        className={`w-8 h-8 rounded-full border-2 ${selectedColor === color
-                          ? 'border-indigo-600 ring-2 ring-indigo-600 ring-offset-2'
-                          : 'border-gray-300'
-                          }`}
-                        style={{
-                          backgroundColor:
-                            color.toLowerCase() === 'brown'
-                              ? '#8B4513'
-                              : color.toLowerCase()
-                        }}
-                        title={color}
-                      />
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={`px-4 py-2 border rounded-md font-medium ${selectedSize === size ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300'}`}
+                      >
+                        {size}
+                      </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {product.customizationType === 't-shirt' &&
-                product.availableSizes?.length > 0 && (
-                  <div>
-                    <span className="block text-sm font-medium text-gray-700 mb-2">
-                      Size
-                    </span>
-
-                    <div className="flex gap-2 flex-wrap">
-                      {product.availableSizes.map((size) => (
-                        <button
-                          key={size}
-                          onClick={() => setSelectedSize(size)}
-                          className={`px-4 py-2 border rounded-md font-medium ${selectedSize === size
-                            ? 'bg-indigo-600 text-white border-indigo-600'
-                            : 'bg-white text-gray-700 border-gray-300'
-                            }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
+              {/* Logo Position — t-shirt */}
+              {product.customizationType === 't-shirt' && (
+                <div>
+                  <span className="block text-sm font-medium text-gray-700 mb-2">Logo Position</span>
+                  <div className="flex gap-2 flex-wrap">
+                    {['Center', 'Left Chest', 'Right Chest'].map((pos) => (
+                      <button
+                        key={pos}
+                        onClick={() => setLogoPosition(pos)}
+                        className={`px-4 py-2 border rounded-md font-medium ${logoPosition === pos ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-300'}`}
+                      >
+                        {pos}
+                      </button>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
 
-
-
+              {/* Special Instructions */}
               <div>
-                <span className="block text-sm font-medium text-gray-700 mb-2">Upload Image</span>
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <FiUpload className="w-8 h-8 mb-3 text-gray-400" />
-                    <p className="mb-1 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                    {uploadedImageFile && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <p className="text-xs text-indigo-600 font-semibold">
-                          {uploadedImageFile.name}
-                        </p>
+                <span className="block text-sm font-medium text-gray-700 mb-2">Special Instructions</span>
+                <textarea
+                  value={specialInstructions}
+                  onChange={(e) => setSpecialInstructions(e.target.value)}
+                  placeholder="Place logo on left chest, make logo smaller, etc."
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-600 focus:ring-0 transition-colors resize-none"
+                  rows="3"
+                ></textarea>
+              </div>
 
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleRemoveImage();
-                          }}
-                          className="ml-2 text-red-500 font-bold hover:text-red-700"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
-                  </div>
+              {/* Mug upload (single image) */}
+              {product.customizationType === 'mug' && (
+                <div>
+                  <span className="block text-sm font-medium text-gray-700 mb-2">Upload Image</span>
                   <input
                     ref={fileInputRef}
+                    id="mug-upload-input"
                     type="file"
                     className="hidden"
                     accept="image/*"
                     onChange={handleImageUpload}
                   />
-                </label>
+                  {uploadedImageFile ? (
+                    <div className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-2.5">
+                      <span className="text-sm text-indigo-700 font-medium truncate max-w-[70%]">{uploadedImageFile.name}</span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="text-red-500 hover:text-red-700 font-bold text-lg leading-none ml-2 flex-shrink-0"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <label
+                      htmlFor="mug-upload-input"
+                      className="flex items-center justify-center gap-3 w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors text-gray-500 font-semibold text-sm"
+                    >
+                      <FiUpload className="w-5 h-5" />
+                      Click to upload
+                    </label>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          {product.customizable && (
+            <div className="mt-6 mb-2 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg shadow-sm">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 text-amber-500 text-xl">
+                  📸
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-bold text-amber-800 uppercase tracking-wider mb-1">Important</h3>
+                  <div className="text-sm text-amber-700 space-y-2">
+                    <p>Before adding to cart, please take screenshots of your <strong>Front Design</strong> and <strong>Back Design</strong> previews.</p>
+                    <p>After placing your order, send the screenshots along with your Order ID to:</p>
+                    <ul className="font-semibold space-y-1 mt-1">
+                      <li>📧 <a href="mailto:calmandcozy34@gmail.com" className="underline hover:text-amber-900 transition-colors">calmandcozy34@gmail.com</a></li>
+                      <li>📱 WhatsApp: 8300932172</li>
+                    </ul>
+                    <p className="mt-2 text-xs opacity-90">This helps us ensure your custom design is printed exactly as shown in the preview.</p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -748,7 +976,7 @@ export default function ProductDetails() {
                   if (
                     product.customizationType === "t-shirt" &&
                     !selectedColor &&
-                    product.availableColors?.length > 0
+                    product.colorVariants?.length > 0
                   ) {
                     return toast.error("Please select a color");
                   }

@@ -2,7 +2,7 @@ export default function Marquee() {
   const items = [
     "🔥 Buy Any 3 T-Shirts for ₹899 Only",
     "⚡ Buy Any 3 Oversized T-Shirts for ₹1199 Only",
-    "🚚 Free Shipping Above ₹999",
+    "🚚 Free Shipping All Over India",
   ];
 
   const allItems = [...items, ...items, ...items, ...items];

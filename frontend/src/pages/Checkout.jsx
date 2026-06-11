@@ -8,6 +8,8 @@ import { useCart } from '../context/CartContext';
 import { fetchAddresses } from '../lib/addressService';
 import { createOrder } from '../lib/orderService';
 import { createPaymentOrder } from '../lib/paymentService';
+import html2canvas from 'html2canvas';
+import api from '../lib/api';
 
 export default function Checkout() {
   const { user } = useAuth();
@@ -76,18 +78,160 @@ export default function Checkout() {
         handler: async function (response) {
           try {
             // Payment successful, now create the Strapi order
-            const orderItems = cartItems.map(item => ({
-              productId: item.product.documentId,
-              productName: item.product.title,
-              productImage: item.product.images?.[0]?.url || '',
-              quantity: item.quantity,
-              price: item.product.sellingPrice || item.product.price,
-              selectedColor: item.selectedColor,
-              selectedSize: item.selectedSize,
-              customText: item.customText,
-              uploadedImageUrl: item.uploadedImageUrl,
-              previewImageUrl: item.previewImageUrl,
-              previewImage: item.previewImageId,
+            const helperGetImageUrl = (url) => {
+              if (!url) return "";
+              return url.startsWith("http") ? url : `${STRAPI_URL}${url}`;
+            };
+
+            const captureMockup = async (containerDOM) => {
+              // Hide it visually
+              containerDOM.style.position = 'absolute';
+              containerDOM.style.top = '-9999px';
+              containerDOM.style.left = '-9999px';
+              containerDOM.style.zIndex = '-9999';
+              document.body.appendChild(containerDOM);
+
+              // Wait for all dynamically appended images to load
+              const imgs = Array.from(containerDOM.querySelectorAll('img'));
+              await Promise.all(imgs.map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise((resolve) => {
+                  img.onload = resolve;
+                  img.onerror = resolve; // Continue even if one fails
+                });
+              }));
+
+              try {
+                const canvas = await html2canvas(containerDOM, {
+                  useCORS: true,
+                  backgroundColor: '#f9fafb',
+                  ignoreElements: (node) => {
+                    // This explicitly ignores any style/link tags preventing Tailwind oklch parsing errors
+                    return node.tagName === 'STYLE' || node.tagName === 'LINK';
+                  }
+                });
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                const formData = new FormData();
+                formData.append('files', blob, 'mockup.png');
+                const res = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                return res.data[0].url;
+              } finally {
+                if (document.body.contains(containerDOM)) {
+                  document.body.removeChild(containerDOM);
+                }
+              }
+            };
+
+            const orderItems = await Promise.all(cartItems.map(async (item) => {
+              let frontMockupUrl = null;
+              let backMockupUrl = null;
+
+              if (item.product?.customizable && item.product?.customizationType === 't-shirt') {
+                const variant = item.product.colorVariants?.find(
+                  v => v.colorName?.trim().toLowerCase() === item.selectedColor?.trim().toLowerCase()
+                );
+                const frontImgUrl = helperGetImageUrl(variant?.frontImage?.url || item.product.images?.[0]?.url);
+                const backImgUrl = helperGetImageUrl(variant?.backImage?.url);
+
+                // --- FRONT MOCKUP ---
+                const frontContainer = document.createElement('div');
+                frontContainer.style.cssText = 'width: 800px; height: 800px; background-color: #f9fafb; position: relative; display: flex; align-items: center; justify-content: center;';
+                
+                if (frontImgUrl) {
+                  const baseImg = document.createElement('img');
+                  baseImg.crossOrigin = 'anonymous';
+                  baseImg.src = frontImgUrl;
+                  baseImg.style.cssText = 'width: 100%; height: 100%; object-fit: contain;';
+                  frontContainer.appendChild(baseImg);
+                }
+                
+                if (item.uploadedImageUrl || item.customText) {
+                  const overlay = document.createElement('div');
+                  overlay.style.cssText = 'position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;';
+                  
+                  if (item.logoPosition === 'Left Chest') {
+                    overlay.style.cssText += 'top: 30%; left: 52%; width: 9%; height: 9%;';
+                  } else if (item.logoPosition === 'Right Chest') {
+                    overlay.style.cssText += 'top: 30%; left: 40%; width: 9%; height: 9%;';
+                  } else {
+                    overlay.style.cssText += 'top: 30%; left: 35%; width: 30%; height: 30%;';
+                  }
+
+                  if (item.uploadedImageUrl) {
+                    const logoImg = document.createElement('img');
+                    logoImg.crossOrigin = 'anonymous';
+                    logoImg.src = helperGetImageUrl(item.uploadedImageUrl);
+                    logoImg.style.cssText = 'width: 100%; height: 100%; object-fit: contain;';
+                    overlay.appendChild(logoImg);
+                  }
+                  if (item.customText) {
+                    const textSpan = document.createElement('span');
+                    textSpan.innerText = item.customText;
+                    textSpan.style.cssText = 'color: #111827; font-size: 24px; font-weight: 900; margin-top: 4px;';
+                    overlay.appendChild(textSpan);
+                  }
+                  frontContainer.appendChild(overlay);
+                }
+
+                try {
+                  frontMockupUrl = await captureMockup(frontContainer);
+                } catch(e) { console.error('Front mockup failed:', e); }
+
+                // --- BACK MOCKUP ---
+                const backContainer = document.createElement('div');
+                backContainer.style.cssText = 'width: 800px; height: 800px; background-color: #f9fafb; position: relative; display: flex; align-items: center; justify-content: center;';
+                
+                if (backImgUrl) {
+                  const baseImg = document.createElement('img');
+                  baseImg.crossOrigin = 'anonymous';
+                  baseImg.src = backImgUrl;
+                  baseImg.style.cssText = 'width: 100%; height: 100%; object-fit: contain;';
+                  backContainer.appendChild(baseImg);
+                }
+                
+                if (item.backImageUrl) {
+                  const overlay = document.createElement('div');
+                  overlay.style.cssText = 'position: absolute; top: 25%; left: 25%; width: 50%; height: 50%; display: flex; align-items: center; justify-content: center;';
+                  
+                  const logoImg = document.createElement('img');
+                  logoImg.crossOrigin = 'anonymous';
+                  logoImg.src = helperGetImageUrl(item.backImageUrl);
+                  logoImg.style.cssText = 'max-width: 100%; max-height: 100%; object-fit: contain;';
+                  overlay.appendChild(logoImg);
+                  
+                  backContainer.appendChild(overlay);
+                }
+
+                try {
+                  backMockupUrl = await captureMockup(backContainer);
+                } catch(e) { console.error('Back mockup failed:', e); }
+              }
+
+              return {
+                productId: item.product.documentId,
+                productName: item.product.title,
+                productImage: item.product.images?.[0]?.url || '',
+                quantity: item.quantity,
+                price: item.product.sellingPrice || item.product.price,
+                selectedColor: item.selectedColor,
+                selectedSize: item.selectedSize,
+                customText: item.customText,
+                uploadedImageUrl: item.uploadedImageUrl || null,
+                backImageUrl: item.backImageUrl || null,
+                previewImageUrl: item.previewImageUrl || null,
+
+                frontPreviewImageUrl:
+                  item.previewImageUrl || item.uploadedImageUrl || null,
+
+                backPreviewImageUrl:
+                  item.backImageUrl || null,
+                  
+                frontMockupUrl: frontMockupUrl,
+                backMockupUrl: backMockupUrl,
+
+                logoPosition: item.logoPosition || null,
+                specialInstructions: item.specialInstructions || null,
+              };
             }));
 
             const orderData = {
@@ -178,10 +322,16 @@ export default function Checkout() {
   const shippingEstimate = 0;
   const grandTotal = cartSubtotal + shippingEstimate;
 
+  const getImageUrl = (url) => {
+    if (!url) return "";
+    return url.startsWith("http") ? url : `${STRAPI_URL}${url}`;
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       className="container mx-auto max-w-6xl px-4 py-8"
     >
@@ -315,7 +465,7 @@ export default function Checkout() {
             {/* Pricing Summary */}
             <div className="space-y-3 text-sm text-gray-600 border-t border-gray-200 pt-4">
               <div className="flex justify-between">
-                <span>Items ({cartTotalItems})</span>
+                <span>TotalItems ({cartTotalItems})</span>
                 <span className="font-medium text-gray-900 font-satoshi">₹{cartSubtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
@@ -356,5 +506,6 @@ export default function Checkout() {
 
       </div>
     </motion.div>
+    </>
   );
 }
