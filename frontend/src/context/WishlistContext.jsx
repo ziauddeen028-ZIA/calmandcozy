@@ -73,12 +73,15 @@ const handleToggleWishlist = async (productDocumentId) => {
         duration: 1000,
       });
 
-      await apiAddToWishlist(
+      const newItem = await apiAddToWishlist(
         user.id,
         productDocumentId
       );
 
-      await loadWishlist();
+      // Use the POST response directly to avoid a redundant GET request
+      if (newItem) {
+        setWishlist(prev => [...prev, newItem]);
+      }
 
       return true;
     } catch (err) {

@@ -84,39 +84,28 @@ export default function Home() {
   const [homepageFeaturedProduct, setHomepageFeaturedProduct] = useState(null);
 
   useEffect(() => {
-    const fetchFeaturedProducts = async () => {
+    const fetchAll = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/products?filters[featured][$eq]=true&populate=*`
-        );
-        setFeaturedProducts(response.data.data || []);
+        const [featuredRes, homepageRes] = await Promise.all([
+          axios.get(
+            `${import.meta.env.VITE_API_URL}/api/products?filters[featured][$eq]=true&populate[0]=images&populate[1]=category&fields[0]=title&fields[1]=sellingPrice&fields[2]=actualPrice&fields[3]=stock&fields[4]=documentId&fields[5]=bundleOfferEnabled&fields[6]=bundleQty&fields[7]=bundlePrice`
+          ),
+          axios.get(
+            `${import.meta.env.VITE_API_URL}/api/products?filters[homepageFeatured][$eq]=true&populate[0]=images&fields[0]=title&fields[1]=sellingPrice&fields[2]=description&fields[3]=documentId`
+          ),
+        ]);
+        setFeaturedProducts(featuredRes.data.data || []);
+        setHomepageFeaturedProduct(homepageRes.data.data?.[0] || null);
       } catch (err) {
-        console.error('Error fetching featured products:', err);
+        console.error('Error fetching products:', err);
         setError('Failed to load featured products');
       } finally {
         setLoading(false);
       }
     };
-
-    fetchFeaturedProducts();
+    fetchAll();
   }, []);
-
-  const fetchHomepageFeaturedProduct = async () => {
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/products?filters[homepageFeatured][$eq]=true&populate=*`
-      );
-
-      setHomepageFeaturedProduct(response.data.data?.[0] || null);
-    } catch (error) {
-      console.error("Error fetching homepage featured product:", error);
-    }
-  };
-
-  useEffect(() => {
-  fetchHomepageFeaturedProduct();
-}, []);
 
 
   useEffect(() => {

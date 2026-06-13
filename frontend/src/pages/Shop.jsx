@@ -62,7 +62,7 @@ export default function Shop() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await api.get("/products?populate=*");
+        const response = await api.get("/products?populate[0]=images&populate[1]=category&fields[0]=title&fields[1]=sellingPrice&fields[2]=actualPrice&fields[3]=stock&fields[4]=createdAt&fields[5]=theme&fields[6]=documentId");
         const fetchedProducts = response.data.data || [];
         setProducts(fetchedProducts);
 
@@ -97,13 +97,6 @@ export default function Shop() {
   // FILTER & SORT PRODUCTS
   const filteredAndSortedProducts = useMemo(() => {
     let result = [...products];
-    console.log(
-      products.map((p) => ({
-        title: p.title,
-        categoryName: p.category?.name,
-        categorySlug: p.category?.slug,
-      }))
-    );
 
     // Category Filter
     if (selectedTheme) {
@@ -113,15 +106,9 @@ export default function Shop() {
       );
     }
     if (selectedCategory && selectedCategory !== "all") {
-      result = result.filter((product) => {
-        console.log(
-          product.title,
-          "Category Slug:",
-          product.category?.slug
-        );
-
-        return product.category?.slug?.toLowerCase() === selectedCategory;
-      });
+      result = result.filter(
+        (product) => product.category?.slug?.toLowerCase() === selectedCategory
+      );
     }
 
     // Search Filter
@@ -148,7 +135,6 @@ export default function Shop() {
         result.sort((a, b) => b.sellingPrice - a.sellingPrice);
         break;
       case "best-selling":
-        // Fallback to newest if no sales data, or sort by sales if it exists
         result.sort((a, b) => (b.sales || 0) - (a.sales || 0));
         break;
       case "newest":
@@ -156,17 +142,6 @@ export default function Shop() {
         result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         break;
     }
-
-    // --- TEMPORARY DEBUG LOGS ---
-    console.group("Shop Page Filtering Debug Logs");
-    console.log("Selected Category:", selectedCategory);
-    console.log("Product Category Slugs:", products.map(p => p.category?.slug));
-    console.log("Current Max Price:", maxPrice);
-    console.log("Current Sort:", sortBy);
-    console.log("All Products:", products);
-    console.log("Filtered Products:", result);
-    console.groupEnd();
-    // ----------------------------
 
     return result;
   }, [products, selectedCategory, maxPrice, sortBy, initialSearchQuery]);

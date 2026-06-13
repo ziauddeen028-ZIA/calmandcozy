@@ -45,6 +45,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
+    let initialResolved = false;
 
     const initializeAuth = async () => {
       try {
@@ -70,7 +71,10 @@ export const AuthProvider = ({ children }) => {
       } catch (err) {
         console.error(err);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          initialResolved = true;
+        }
       }
     };
 
@@ -86,9 +90,11 @@ export const AuthProvider = ({ children }) => {
         setUser(newSession?.user ?? null);
 
         if (newSession?.user) {
+          // Only re-fetch customer after the initial load is done
+          // to avoid a duplicate fetch on the SIGNED_IN event that fires on startup
           if (
-            event === "SIGNED_IN" ||
-            event === "USER_UPDATED"
+            (event === 'SIGNED_IN' || event === 'USER_UPDATED') &&
+            initialResolved
           ) {
             await loadCustomer(newSession.user);
           }
