@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FiInstagram, FiMail } from 'react-icons/fi';
-import logo from '../assets/Black logo.png';
+import logo from '../assets/Black logo.PNG';
 export default function Footer() {
   return (
     <footer className="bg-gray-50 border-t border-gray-200 pt-14 pb-8 mt-auto">
