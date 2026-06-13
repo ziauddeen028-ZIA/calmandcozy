@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "addresses",
+  "info": {
+    "singularName": "address",
+    "pluralName": "addresses",
+    "displayName": "Address",
+    "description": "Customer delivery addresses"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "full_name": {
+      "type": "string",
+      "required": true
+    },
+    "phone": {
+      "type": "string",
+      "required": true
+    },
+    "address_line_1": {
+      "type": "string",
+      "required": true
+    },
+    "address_line_2": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string",
+      "required": true
+    },
+    "state": {
+      "type": "string",
+      "required": true
+    },
+    "pincode": {
+      "type": "string",
+      "required": true
+    },
+    "country": {
+      "type": "string",
+      "required": true
+    },
+    "is_default": {
+      "type": "boolean",
+      "default": false
+    },
+    "customer": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::customer.customer",
+      "inversedBy": "addresses"
+    }
+  }
+}

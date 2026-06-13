@@ -1,0 +1,55 @@
+{
+  "kind": "collectionType",
+  "collectionName": "customers",
+  "info": {
+    "singularName": "customer",
+    "pluralName": "customers",
+    "displayName": "Customer",
+    "description": "Synced from Supabase"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "full_name": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "required": true,
+      "unique": true
+    },
+    "supabase_id": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "phone": {
+      "type": "string"
+    },
+    "avatar_letter": {
+      "type": "string",
+      "maxLength": 1
+    },
+    "addresses": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::address.address",
+      "mappedBy": "customer"
+    },
+    "wishlists": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::wishlist.wishlist",
+      "mappedBy": "customer"
+    },
+    "carts": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::cart.cart",
+      "mappedBy": "customer"
+    }
+  }
+}

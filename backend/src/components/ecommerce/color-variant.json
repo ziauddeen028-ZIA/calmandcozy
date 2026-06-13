@@ -1,0 +1,29 @@
+{
+  "collectionName": "components_ecommerce_color_variants",
+  "info": {
+    "displayName": "ColorVariant",
+    "icon": "palette"
+  },
+  "options": {},
+  "attributes": {
+    "colorName": {
+      "type": "string"
+    },
+    "frontImage": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "backImage": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images"
+      ]
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "collectionName": "components_ecommerce_order_items",
+  "info": {
+    "displayName": "Order Item",
+    "icon": "shopping-cart",
+    "description": "An item in an order"
+  },
+  "options": {},
+  "attributes": {
+    "productId": {
+      "type": "string",
+      "required": true
+    },
+    "productName": {
+      "type": "string",
+      "required": true
+    },
+    "productImage": {
+      "type": "string"
+    },
+    "quantity": {
+      "type": "integer",
+      "required": true,
+      "default": 1
+    },
+    "price": {
+      "type": "decimal",
+      "required": true
+    },
+    "selectedColor": {
+      "type": "string"
+    },
+    "selectedSize": {
+      "type": "string"
+    },
+    "customText": {
+      "type": "text"
+    },
+    "uploadedImageUrl": {
+      "type": "string"
+    },
+    "backImageUrl": {
+      "type": "string"
+    },
+    "previewImageUrl": {
+      "type": "string"
+    },
+    "logoPosition": {
+      "type": "string"
+    },
+    "specialInstructions": {
+      "type": "text"
+    },
+    "frontPreviewImageUrl": {
+      "type": "string"
+    },
+    "backPreviewImageUrl": {
+      "type": "string"
+    },
+    "frontMockupUrl": {
+      "type": "string"
+    },
+    "backMockupUrl": {
+      "type": "string"
+    }
+  }
+}

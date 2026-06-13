@@ -1,0 +1,66 @@
+{
+  "kind": "collectionType",
+  "collectionName": "carts",
+  "info": {
+    "singularName": "cart",
+    "pluralName": "carts",
+    "displayName": "Cart"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "customer": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::customer.customer",
+      "inversedBy": "carts"
+    },
+    "product": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::product.product",
+      "inversedBy": "carts"
+    },
+    "quantity": {
+      "type": "integer",
+      "default": 1,
+      "min": 1,
+      "required": true
+    },
+    "selectedColor": {
+      "type": "string"
+    },
+    "selectedSize": {
+      "type": "string"
+    },
+    "customText": {
+      "type": "text"
+    },
+    "uploadedImageUrl": {
+      "type": "string"
+    },
+    "backImageUrl": {
+      "type": "string"
+    },
+    "previewImageUrl": {
+      "type": "string"
+    },
+    "previewImageId": {
+      "type": "integer"
+    },
+    "variantId": {
+      "type": "integer"
+    },
+    "variantSize": {
+      "type": "string"
+    },
+    "logoPosition": {
+      "type": "string"
+    },
+    "specialInstructions": {
+      "type": "text"
+    }
+  }
+}
