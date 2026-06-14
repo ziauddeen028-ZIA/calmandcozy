@@ -40,6 +40,7 @@ export default function ProductDetails() {
   const [error, setError] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [togglingWishlist, setTogglingWishlist] = useState(false);
 
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
@@ -985,10 +986,7 @@ export default function ProductDetails() {
               onClick={handleAddToCart}
             >
               {addingToCart ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Adding...
-                </>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   <FiShoppingCart className="w-5 h-5" />
@@ -997,8 +995,9 @@ export default function ProductDetails() {
               )}
             </button>
             <button
-              className="px-6 py-4 border-2 border-gray-200 hover:border-gray-300 rounded-xl text-gray-600 hover:text-red-500 transition-colors flex items-center justify-center bg-white shadow-sm hover:shadow-md"
-              onClick={() => {
+              className="px-6 py-4 border-2 border-gray-200 hover:border-gray-300 rounded-xl text-gray-600 hover:text-red-500 transition-colors flex items-center justify-center bg-white shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={togglingWishlist}
+              onClick={async () => {
                 // Variant products
                 if (hasVariants && !selectedVariant) {
                   return toast.error("Please select a size");
@@ -1033,10 +1032,19 @@ export default function ProductDetails() {
                   }
                 }
 
-                handleToggleWishlist(product.documentId);
+                setTogglingWishlist(true);
+                try {
+                  await handleToggleWishlist(product.documentId);
+                } finally {
+                  setTogglingWishlist(false);
+                }
               }}
             >
-              <FiHeart className={`w-6 h-6 ${inWishlist ? 'text-red-500' : ''}`} />
+              {togglingWishlist ? (
+                <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <FiHeart className={`w-6 h-6 ${inWishlist ? 'text-red-500' : ''}`} />
+              )}
             </button>
           </div>
         </div>

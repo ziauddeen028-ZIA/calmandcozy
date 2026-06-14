@@ -494,12 +494,12 @@ export default function Checkout() {
   `}
               >
                 {isPlacingOrder ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Processing Order...
-                  </>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  'Place Order'
+                  <>
+                    <FiCheckCircle className="mr-2 h-5 w-5" />
+                    Place Order (₹{grandTotal.toFixed(2)})
+                  </>
                 )}
               </button>
 

@@ -237,10 +237,7 @@ export default function Cart() {
                       className="flex items-center gap-1 text-sm font-medium text-red-500 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {removingId === item.documentId ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-                          <span>Removing...</span>
-                        </>
+                        <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
                       ) : (
                         <>
                           <FiTrash2 className="h-4 w-4" />

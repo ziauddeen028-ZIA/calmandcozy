@@ -250,10 +250,7 @@ function AddressFormModal({ initial, onSave, onCancel, isSaving }) {
               className="flex-1 py-2.5 px-4 flex items-center justify-center gap-2 text-sm font-medium text-white bg-brand-600 rounded-lg hover:bg-brand-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               {isSaving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Saving...
-                </>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (initial ? 'Update Address' : 'Save Address')}
             </button>
             <button
@@ -357,10 +354,7 @@ function ProfileSidebar({ onLogout, isLoggingOut }) {
             className="w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50 transition-colors mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoggingOut ? (
-              <>
-                <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin mr-3" />
-                Logging Out...
-              </>
+              <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
                 <FiLogOut className="mr-3 h-5 w-5 text-red-500" />

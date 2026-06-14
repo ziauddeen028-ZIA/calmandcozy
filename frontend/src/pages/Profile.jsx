@@ -109,10 +109,7 @@ export default function Profile() {
                 className="w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50 transition-colors mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoggingOut ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin mr-3" />
-                    Logging Out...
-                  </>
+                  <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
                     <FiLogOut className="mr-3 h-5 w-5 text-red-500" />
@@ -185,10 +182,7 @@ export default function Profile() {
                   className="inline-flex items-center justify-center gap-2 py-2.5 px-6 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
                 >
                   {isSaving ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Saving...
-                    </>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     'Save Changes'
                   )}

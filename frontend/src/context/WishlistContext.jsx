@@ -44,11 +44,6 @@ const handleToggleWishlist = async (productDocumentId) => {
 
   if (existingItem) {
     try {
-      // Show toast immediately
-      toast.success('Removed from Wishlist 💔', {
-        duration: 1000,
-      });
-
       await apiRemoveFromWishlist(
         user.id,
         existingItem.documentId
@@ -61,6 +56,10 @@ const handleToggleWishlist = async (productDocumentId) => {
         )
       );
 
+      toast.success('Removed from Wishlist 💔', {
+        duration: 1000,
+      });
+
       return true;
     } catch (err) {
       toast.error('Failed to remove from wishlist');
@@ -68,11 +67,6 @@ const handleToggleWishlist = async (productDocumentId) => {
     }
   } else {
     try {
-      // Show toast immediately
-      toast.success('Added to Wishlist ❤️', {
-        duration: 1000,
-      });
-
       const newItem = await apiAddToWishlist(
         user.id,
         productDocumentId
@@ -82,6 +76,10 @@ const handleToggleWishlist = async (productDocumentId) => {
       if (newItem) {
         setWishlist(prev => [...prev, newItem]);
       }
+
+      toast.success('Added to Wishlist ❤️', {
+        duration: 1000,
+      });
 
       return true;
     } catch (err) {

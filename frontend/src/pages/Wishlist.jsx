@@ -95,10 +95,7 @@ const Wishlist = () => {
                       className="col-span-3 flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-white font-medium hover:bg-brand-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                       {addingCartId === item.documentId ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Adding...
-                        </>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       ) : (
                         <>
                           <FiShoppingCart className="w-4 h-4" />

@@ -125,17 +125,17 @@ export default function ProductCard({ product }) {
             e.preventDefault();
             setAddingToCart(true);
             try {
-              await addToCart(documentId, 1);
+              await Promise.all([
+                addToCart(documentId, 1),
+                new Promise(resolve => setTimeout(resolve, 500))
+              ]);
             } finally {
               setAddingToCart(false);
             }
           }}
         >
           {addingToCart ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Adding...
-            </>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
             <>
               <FiShoppingCart className="w-4 h-4" />
