@@ -39,6 +39,7 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
@@ -239,7 +240,9 @@ export default function ProductDetails() {
     : (product?.stock ?? 0);
 
   const handleAddToCart = async () => {
-    // ── Variant-based (apparel) product ──
+    setAddingToCart(true);
+    try {
+      // ── Variant-based (apparel) product ──
     if (hasVariants) {
       if (!selectedVariant) {
         return toast.error('Please select a size');
@@ -364,6 +367,9 @@ export default function ProductDetails() {
     } else {
       // Plain product (no variants, not customizable)
       addToCart(product.documentId, 1);
+    }
+    } finally {
+      setAddingToCart(false);
     }
   };
 
@@ -974,12 +980,21 @@ export default function ProductDetails() {
 
           <div className="flex flex-col sm:flex-row gap-4 mt-auto border-t border-gray-100 pt-8">
             <button
-              disabled={isAddToCartDisabled}
+              disabled={isAddToCartDisabled || addingToCart}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-4 px-8 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
               onClick={handleAddToCart}
             >
-              <FiShoppingCart className="w-5 h-5" />
-              {addToCartLabel}
+              {addingToCart ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <FiShoppingCart className="w-5 h-5" />
+                  {addToCartLabel}
+                </>
+              )}
             </button>
             <button
               className="px-6 py-4 border-2 border-gray-200 hover:border-gray-300 rounded-xl text-gray-600 hover:text-red-500 transition-colors flex items-center justify-center bg-white shadow-sm hover:shadow-md"
