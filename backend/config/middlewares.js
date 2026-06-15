@@ -28,7 +28,12 @@ module.exports = ({ env }) => [
   {
     name: 'strapi::cors',
     config: {
-      origin: ['http://localhost:5174', env('FRONTEND_URL')].filter(Boolean),
+      origin: [
+        'http://localhost:5174',
+        'https://calmandcozy.netlify.app',
+        'https://calmandcozy.in',
+        'https://www.calmandcozy.in',
+      ],
       headers: [
         'Content-Type',
         'Authorization',
