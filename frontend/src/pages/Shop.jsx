@@ -6,7 +6,6 @@ import api from "../lib/api";
 import ProductGrid from "../components/ProductGrid";
 import ProductGridSkeleton from "../components/ProductGridSkeleton";
 import StoreLoadingBanner from "../components/StoreLoadingBanner";
-import { useLoadingStages } from "../hooks/useLoadingStages";
 
 // CATEGORY MAP
 const categoryMap = {
@@ -34,8 +33,6 @@ export default function Shop() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const { stageLabel, progress } = useLoadingStages(loading);
 
   // FILTER & SORT STATES
   const [selectedCategory, setSelectedCategory] = useState(
@@ -304,11 +301,7 @@ export default function Shop() {
 
         {/* MAIN CONTENT */}
         <div className="flex-1">
-          <StoreLoadingBanner
-            loading={loading}
-            stageLabel={stageLabel}
-            progress={progress}
-          />
+          <StoreLoadingBanner loading={loading} />
 
           {loading ? (
             <ProductGridSkeleton count={8} />

@@ -5,7 +5,6 @@ import axios from 'axios';
 import ProductGrid from '../components/ProductGrid';
 import ProductGridSkeleton from '../components/ProductGridSkeleton';
 import StoreLoadingBanner from '../components/StoreLoadingBanner';
-import { useLoadingStages } from '../hooks/useLoadingStages';
 import { FiArrowRight, FiChevronLeft, FiChevronRight, FiShoppingBag } from 'react-icons/fi';
 import Banner from '../assets/Banner.jpeg';
 import Banner2 from '../assets/Banner2.png';
@@ -85,8 +84,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [homepageFeaturedProduct, setHomepageFeaturedProduct] = useState(null);
-
-  const { stageLabel, progress } = useLoadingStages(loading);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -282,11 +279,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <StoreLoadingBanner
-            loading={loading}
-            stageLabel={stageLabel}
-            progress={progress}
-          />
+          <StoreLoadingBanner loading={loading} />
 
           {loading ? (
             <ProductGridSkeleton count={8} />
