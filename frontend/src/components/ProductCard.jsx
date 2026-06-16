@@ -15,17 +15,11 @@ export default function ProductCard({ product }) {
 
   const inWishlist = isInWishlist(documentId);
 
-  const [addingToCart, setAddingToCart] = useState(false);
-  const [togglingWishlist, setTogglingWishlist] = useState(false);
+  const [added, setAdded] = useState(false);
 
-  const handleWishlist = async (e) => {
+  const handleWishlist = (e) => {
     e.preventDefault();
-    setTogglingWishlist(true);
-    try {
-      await handleToggleWishlist(documentId);
-    } finally {
-      setTogglingWishlist(false);
-    }
+    handleToggleWishlist(documentId);
   };
 
   const getImageUrl = (img) => {
@@ -77,21 +71,16 @@ export default function ProductCard({ product }) {
         )}
         {/* Wishlist Button */}
         <button
-          className={`absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${inWishlist
+          className={`absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm hover:bg-red-50 hover:text-red-500 transition-colors ${inWishlist
             ? 'opacity-100 text-red-500'
             : 'opacity-100 text-gray-700 md:opacity-0 md:group-hover:opacity-100'
             }`}
           onClick={handleWishlist}
-          disabled={togglingWishlist}
           aria-label="Add to wishlist"
         >
-          {togglingWishlist ? (
-            <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <FiHeart
-              className={`w-4 h-4 sm:w-5 sm:h-5 ${inWishlist ? 'fill-current text-red-500' : 'hover:text-red-500'}`}
-            />
-          )}
+          <FiHeart
+            className={`w-4 h-4 sm:w-5 sm:h-5 ${inWishlist ? 'fill-current text-red-500' : 'hover:text-red-500'}`}
+          />
         </button>
       </Link>
 
@@ -119,23 +108,25 @@ export default function ProductCard({ product }) {
 
         <motion.button
           whileTap={{ scale: 0.95 }}
-          className="w-full py-2 sm:py-2.5 px-4 bg-gray-900 hover:bg-blue-600 text-white rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-          disabled={addingToCart}
-          onClick={async (e) => {
+          className={`w-full py-2 sm:py-2.5 px-4 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${
+            added ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-900 hover:bg-blue-600 text-white'
+          }`}
+          onClick={(e) => {
             e.preventDefault();
-            setAddingToCart(true);
-            try {
-              await Promise.all([
-                addToCart(documentId, 1),
-                new Promise(resolve => setTimeout(resolve, 500))
-              ]);
-            } finally {
-              setAddingToCart(false);
+            const success = addToCart(documentId, 1);
+            if (success) {
+              setAdded(true);
+              setTimeout(() => setAdded(false), 2000);
             }
           }}
         >
-          {addingToCart ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          {added ? (
+            <>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+              Added
+            </>
           ) : (
             <>
               <FiShoppingCart className="w-4 h-4" />

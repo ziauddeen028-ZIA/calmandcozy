@@ -40,7 +40,7 @@ export default function ProductDetails() {
   const [error, setError] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
-  const [togglingWishlist, setTogglingWishlist] = useState(false);
+  const [addedToCartCheck, setAddedToCartCheck] = useState(false);
 
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
@@ -252,11 +252,13 @@ export default function ProductDetails() {
           return toast.error('Selected size is out of stock');
         }
 
-        await addToCart(product.documentId, 1, {
+        addToCart(product.documentId, 1, {
           variantId: selectedVariant.id,
           variantSize: selectedVariant.size,
           selectedSize: selectedVariant.size,
         });
+        setAddedToCartCheck(true);
+        setTimeout(() => setAddedToCartCheck(false), 2000);
         return;
       }
 
@@ -362,12 +364,17 @@ export default function ProductDetails() {
           specialInstructions,
         };
 
-        await addToCart(product.documentId, 1, customization);
+        addToCart(product.documentId, 1, customization);
+        setAddedToCartCheck(true);
+        setTimeout(() => setAddedToCartCheck(false), 2000);
+
         localStorage.removeItem(`color_${id}`);
         localStorage.removeItem(`size_${id}`);
       } else {
         // Plain product (no variants, not customizable)
-        await addToCart(product.documentId, 1);
+        addToCart(product.documentId, 1);
+        setAddedToCartCheck(true);
+        setTimeout(() => setAddedToCartCheck(false), 2000);
       }
     } finally {
       setAddingToCart(false);
@@ -982,11 +989,18 @@ export default function ProductDetails() {
           <div className="flex flex-col sm:flex-row gap-4 mt-auto border-t border-gray-100 pt-8">
             <button
               disabled={isAddToCartDisabled || addingToCart}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-4 px-8 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+              className={`flex-1 disabled:cursor-not-allowed text-white py-4 px-8 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-sm hover:shadow-md ${
+                addedToCartCheck ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300'
+              }`}
               onClick={handleAddToCart}
             >
               {addingToCart ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : addedToCartCheck ? (
+                <>
+                  <FiCheck className="w-5 h-5" />
+                  Added!
+                </>
               ) : (
                 <>
                   <FiShoppingCart className="w-5 h-5" />
@@ -995,56 +1009,12 @@ export default function ProductDetails() {
               )}
             </button>
             <button
-              className="px-6 py-4 border-2 border-gray-200 hover:border-gray-300 rounded-xl text-gray-600 hover:text-red-500 transition-colors flex items-center justify-center bg-white shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={togglingWishlist}
-              onClick={async () => {
-                // Variant products
-                if (hasVariants && !selectedVariant) {
-                  return toast.error("Please select a size");
-                }
-
-                // Customizable products
-                if (product.customizable) {
-                  if (
-                    product.customizationType === "t-shirt" &&
-                    !selectedColor &&
-                    product.colorVariants?.length > 0
-                  ) {
-                    return toast.error("Please select a color");
-                  }
-
-                  if (
-                    product.customizationType === "t-shirt" &&
-                    !selectedSize &&
-                    product.availableSizes?.length > 0
-                  ) {
-                    return toast.error("Please select a size");
-                  }
-
-                  if (product.customizationType === "mug") {
-                    if (!selectedColor && product.availableColors?.length > 0) {
-                      return toast.error("Please select a mug color");
-                    }
-
-                    if (!uploadedImageFile) {
-                      return toast.error("Please upload an image");
-                    }
-                  }
-                }
-
-                setTogglingWishlist(true);
-                try {
-                  await handleToggleWishlist(product.documentId);
-                } finally {
-                  setTogglingWishlist(false);
-                }
+              className="px-6 py-4 border-2 border-gray-200 hover:border-gray-300 rounded-xl text-gray-600 hover:text-red-500 transition-colors flex items-center justify-center bg-white shadow-sm hover:shadow-md"
+              onClick={() => {
+                handleToggleWishlist(product.documentId);
               }}
             >
-              {togglingWishlist ? (
-                <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <FiHeart className={`w-6 h-6 ${inWishlist ? 'text-red-500' : ''}`} />
-              )}
+              <FiHeart className={`w-6 h-6 ${inWishlist ? 'fill-current text-red-500' : ''}`} />
             </button>
           </div>
         </div>

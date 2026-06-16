@@ -180,19 +180,6 @@ function AddressFormModal({ initial, onSave, onCancel, isSaving }) {
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field
-              label="City" name="city" required
-              value={form.city} onChange={handleChange}
-              error={errors.city} placeholder="City"
-            />
-            <Field
-              label="State" name="state" required
-              value={form.state} onChange={handleChange}
-              error={errors.state} placeholder="State"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Pincode with auto-lookup spinner */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -229,6 +216,19 @@ function AddressFormModal({ initial, onSave, onCancel, isSaving }) {
               label="Country" name="country" required
               value={form.country} onChange={handleChange}
               error={errors.country} placeholder="Country"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field
+              label="City" name="city" required
+              value={form.city} onChange={handleChange}
+              error={errors.city} placeholder="City"
+            />
+            <Field
+              label="State" name="state" required
+              value={form.state} onChange={handleChange}
+              error={errors.state} placeholder="State"
             />
           </div>
 

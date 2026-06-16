@@ -45,9 +45,9 @@ export const CartProvider = ({ children }) => {
   }, [loadCart]);
 
   // ─── addToCart ────────────────────────────────────────────────
-  // Optimistically bumps the pending count so the badge updates instantly,
-  // then fires the API and does a single loadCart() to hydrate the real item.
-  const addToCart = async (productDocumentId, quantity = 1, customization = {}) => {
+  // Optimistically bumps the pending count so the badge updates instantly.
+  // API fires in background. Returns immediately.
+  const addToCart = (productDocumentId, quantity = 1, customization = {}) => {
     if (!user) {
       toast('Please sign in to continue.', { icon: '🔒' });
       navigate('/login');
@@ -56,22 +56,23 @@ export const CartProvider = ({ children }) => {
 
     // Optimistic: increment badge immediately
     setPendingAddCount((n) => n + quantity);
+    toast.success('Added to Cart 🛒', { duration: 1500 });
 
-    try {
-      await apiAddToCart(user.id, productDocumentId, quantity, customization);
-      toast.success('Added to Cart 🛒', { duration: 1500 });
-      return true;
-    } catch (error) {
-      // Revert pending count on failure
-      setPendingAddCount((n) => n - quantity);
-      toast.error('Failed to add to cart');
-      return false;
-    } finally {
-      // Always sync the real cart data — clears pendingAddCount naturally
-      // because loadCart will set the authoritative cartItems.
-      await loadCart();
-      setPendingAddCount(0);
-    }
+    // Background API call
+    (async () => {
+      try {
+        await apiAddToCart(user.id, productDocumentId, quantity, customization);
+      } catch (error) {
+        // Revert pending count on failure
+        setPendingAddCount((n) => n - quantity);
+        toast.error('Failed to add to cart');
+      } finally {
+        await loadCart();
+        setPendingAddCount(0);
+      }
+    })();
+
+    return true;
   };
 
   // ─── updateQuantity ───────────────────────────────────────────
