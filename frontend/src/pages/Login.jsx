@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { FiMail, FiLock } from 'react-icons/fi';
-import Loader from '../components/Loader';
+import { FiMail } from 'react-icons/fi';
+import PasswordInput from '../components/PasswordInput';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -62,17 +62,14 @@ export default function Login() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Password</label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiLock className="text-gray-400" />
-              </div>
-              <input
-                type="password"
+            <div className="mt-1">
+              <PasswordInput
+                id="login-password"
+                name="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500 text-sm"
-                placeholder="••••••••"
+                autoComplete="current-password"
               />
             </div>
           </div>

@@ -3,7 +3,10 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import ProductGrid from '../components/ProductGrid';
-import { FiArrowRight, FiMail, FiChevronLeft, FiChevronRight, FiShoppingBag } from 'react-icons/fi';
+import ProductGridSkeleton from '../components/ProductGridSkeleton';
+import StoreLoadingBanner from '../components/StoreLoadingBanner';
+import { useLoadingStages } from '../hooks/useLoadingStages';
+import { FiArrowRight, FiChevronLeft, FiChevronRight, FiShoppingBag } from 'react-icons/fi';
 import Banner from '../assets/Banner.jpeg';
 import Banner2 from '../assets/Banner2.png';
 import BannerMobile from '../assets/Banner Mobile.png';
@@ -82,6 +85,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [homepageFeaturedProduct, setHomepageFeaturedProduct] = useState(null);
+
+  const { stageLabel, progress } = useLoadingStages(loading);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -277,8 +282,14 @@ export default function Home() {
             </Link>
           </div>
 
+          <StoreLoadingBanner
+            loading={loading}
+            stageLabel={stageLabel}
+            progress={progress}
+          />
+
           {loading ? (
-            <div className="text-center py-10 text-gray-500">Loading new arrivals...</div>
+            <ProductGridSkeleton count={8} />
           ) : error ? (
             <div className="text-center py-10 text-red-500">{error}</div>
           ) : featuredProducts.length === 0 ? (

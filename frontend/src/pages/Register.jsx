@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { FiMail, FiLock, FiUser } from 'react-icons/fi';
+import { FiMail, FiUser } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import PasswordInput from '../components/PasswordInput';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -105,36 +106,28 @@ export default function Register() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Password</label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiLock className="text-gray-400" />
-              </div>
-              <input
-                type="password"
+            <div className="mt-1">
+              <PasswordInput
+                id="register-password"
                 name="password"
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500 text-sm"
-                placeholder="••••••••"
+                autoComplete="new-password"
               />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
-            <div className="mt-1 relative rounded-md shadow-sm">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiLock className="text-gray-400" />
-              </div>
-              <input
-                type="password"
+            <div className="mt-1">
+              <PasswordInput
+                id="register-confirm-password"
                 name="confirmPassword"
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500 text-sm"
-                placeholder="••••••••"
+                autoComplete="new-password"
               />
             </div>
           </div>
