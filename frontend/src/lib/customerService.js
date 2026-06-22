@@ -41,12 +41,12 @@ export async function fetchCustomerBySupabaseId(supabaseId) {
  * Create a new customer record in Strapi.
  * Returns the created customer object.
  */
-export async function createCustomer({ full_name, email, supabase_id, avatar_letter }) {
+export async function createCustomer({ full_name, email, supabase_id, avatar_letter, phone }) {
   const res = await fetch(`${API_URL}/api/customers`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({
-      data: { full_name, email, supabase_id, avatar_letter },
+      data: { full_name, email, supabase_id, avatar_letter, phone },
     }),
   });
 
@@ -89,5 +89,6 @@ export async function syncCustomer(supabaseUser) {
     email: supabaseUser.email,
     supabase_id: supabaseUser.id,
     avatar_letter: avatarLetter,
+    phone: supabaseUser.user_metadata?.phone,
   });
 }

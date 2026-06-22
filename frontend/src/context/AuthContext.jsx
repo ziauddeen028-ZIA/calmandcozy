@@ -115,6 +115,7 @@ export const AuthProvider = ({ children }) => {
   const signUp = async ({
     name,
     email,
+    phone,
     password,
   }) => {
     try {
@@ -125,6 +126,7 @@ export const AuthProvider = ({ children }) => {
           options: {
             data: {
               full_name: name,
+              phone: phone,
             },
           },
         });

@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiUser, FiPackage, FiMapPin, FiHeart, FiLogOut } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { supabase } from '../lib/supabase';
 
 export default function Profile() {
   const { user, customer, setCustomer, signOut } = useAuth();
@@ -57,6 +58,15 @@ export default function Profile() {
 
       const data = await res.json();
       if (data.data) {
+        // Also update in Supabase user metadata
+        const { error: supaError } = await supabase.auth.updateUser({
+          data: { phone }
+        });
+        
+        if (supaError) {
+          console.error("Supabase update error:", supaError);
+        }
+
         setCustomer(data.data);
         toast.success("Profile updated successfully");
       } else {

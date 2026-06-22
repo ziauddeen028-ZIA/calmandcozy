@@ -30,6 +30,16 @@ export default function Footer() {
                 <FiMail className="h-5 w-5" />
                 <span>contact@calmandcozy.in</span>
               </a>
+              <div className="pt-2">
+                <a
+                  href="https://ziauddeen-zia.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-all duration-300"
+                >
+                  Developed by <Zia/> ↗
+                </a>
+              </div>
             </div>
           </div>
 

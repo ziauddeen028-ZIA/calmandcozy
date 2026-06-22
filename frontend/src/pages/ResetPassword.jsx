@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import PasswordInput from '../components/PasswordInput';
 import toast from 'react-hot-toast';
+import { useAuth } from '../hooks/useAuth';
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('');
@@ -10,6 +11,7 @@ export default function ResetPassword() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   useEffect(() => {
     // Check if the user has a valid session for recovery
@@ -37,7 +39,8 @@ export default function ResetPassword() {
     if (error) {
       toast.error(error.message || 'Error updating password');
     } else {
-      toast.success('Password updated successfully');
+      toast.success('Password updated successfully. Please sign in.');
+      await signOut();
       navigate('/login');
     }
   };

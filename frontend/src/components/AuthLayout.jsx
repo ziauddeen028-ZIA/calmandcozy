@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Loader from './Loader';
 import { Link } from 'react-router-dom';
@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 
 export default function AuthLayout() {
   const { user, loading } = useAuth();
+
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -15,8 +17,8 @@ export default function AuthLayout() {
     );
   }
 
-  if (user) {
-    // Redirect logged-in users away from auth pages
+  if (user && location.pathname !== '/reset-password') {
+    // Redirect logged-in users away from auth pages, EXCEPT reset-password
     return <Navigate to="/" replace />;
   }
 
