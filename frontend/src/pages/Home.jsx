@@ -15,6 +15,8 @@ import Oversized from '../assets/oversized.png';
 import Mug from '../assets/Mug.jpg';
 import MousePad from '../assets/mousepad.jpg';
 import DeskPad from '../assets/deskpad.jpg';
+import CustomOrderSection from '../components/CustomOrderSection';
+
 
 const categories = [
   {
@@ -347,6 +349,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+        <CustomOrderSection />
     </motion.div>
   );
 }
