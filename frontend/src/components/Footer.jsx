@@ -37,7 +37,7 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 transition-all duration-300"
                 >
-                  Developed by <Zia/> ↗
+                  Developed by {"<Zia/>"} ↗
                 </a>
               </div>
             </div>
