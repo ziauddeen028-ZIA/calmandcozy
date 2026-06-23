@@ -749,14 +749,15 @@ export default function ProductDetails() {
           </div>
 
           <div className="mb-8">
-            <ul className="space-y-3">
+            <ul className="space-y-4">
               {description?.split("\n").map((line, index) => (
-                <li
-                  key={index}
-                  className="flex items-start gap-3 text-gray-700"
-                >
-                  <span className="text-indigo-600">•</span>
-                  <span>{line}</span>
+                <li key={index} className="flex gap-3">
+                  <span className="text-indigo-600 text-xl leading-none mt-1">
+                    •
+                  </span>
+                  <span className="text-gray-700 leading-relaxed">
+                    {line}
+                  </span>
                 </li>
               ))}
             </ul>
