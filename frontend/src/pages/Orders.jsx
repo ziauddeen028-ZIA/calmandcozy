@@ -171,6 +171,12 @@ export default function Orders() {
                           Payment: {order.paymentStatus}
                         </span>
 
+                        {order.paymentMethod === 'cod' && (
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-orange-100 text-orange-800">
+                            COD (Bal: ₹{order.balanceDueOnDelivery})
+                          </span>
+                        )}
+
                         <p className="font-bold text-gray-900 ml-2">
                           ₹{order.total}
                         </p>

@@ -225,6 +225,22 @@ export default function OrderDetails() {
           </h3>
           <div className="space-y-4">
             <div>
+              <p className="text-sm text-gray-500 mb-1">Payment Method</p>
+              <span className="font-medium text-gray-900 uppercase">{order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online'}</span>
+            </div>
+            {order.paymentMethod === 'cod' && (
+              <>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">COD Advance Paid</p>
+                  <p className="font-medium text-green-600">₹{order.codAdvanceAmount}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Balance Due on Delivery</p>
+                  <p className="font-bold text-brand-600">₹{order.balanceDueOnDelivery}</p>
+                </div>
+              </>
+            )}
+            <div>
               <p className="text-sm text-gray-500 mb-1">Payment Status</p>
               <span
                 className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getPaymentStatusColor(order.paymentStatus)}`}

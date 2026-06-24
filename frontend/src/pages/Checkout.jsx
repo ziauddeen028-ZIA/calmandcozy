@@ -21,7 +21,24 @@ export default function Checkout() {
   const [addressesLoading, setAddressesLoading] = useState(true);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
 
+  const [codAdvanceAmount, setCodAdvanceAmount] = useState(60);
+  const [paymentMethod, setPaymentMethod] = useState('online');
+
   const API_URL = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    async function loadStoreSettings() {
+      try {
+        const res = await api.get('/store-setting');
+        if (res.data?.data?.codAdvanceAmount) {
+          setCodAdvanceAmount(res.data.data.codAdvanceAmount);
+        }
+      } catch (error) {
+        console.error("Failed to load store settings", error);
+      }
+    }
+    loadStoreSettings();
+  }, []);
 
   useEffect(() => {
     async function loadAddresses() {
@@ -65,8 +82,12 @@ export default function Checkout() {
       const shippingEstimate = 0;
       const totalAmount = cartSubtotal + shippingEstimate;
 
+      const isCod = paymentMethod === 'cod';
+      const amountToPay = isCod ? codAdvanceAmount : totalAmount;
+      const balanceDue = isCod ? (totalAmount - codAdvanceAmount) : 0;
+
       // 1. Create Razorpay order from backend
-      const paymentOrder = await createPaymentOrder(user.id, totalAmount);
+      const paymentOrder = await createPaymentOrder(user.id, amountToPay);
 
       // 2. Open Razorpay checkout
       const options = {
@@ -241,6 +262,9 @@ export default function Checkout() {
               email: user.email,
               phone: selectedAddr.phone,
               total: totalAmount,
+              paymentMethod: paymentMethod,
+              codAdvanceAmount: isCod ? codAdvanceAmount : 0,
+              balanceDueOnDelivery: balanceDue,
               paymentStatus: 'paid',
               transactionId: response.razorpay_payment_id,
               orderStatus: 'pending',
@@ -322,6 +346,9 @@ export default function Checkout() {
 
   const shippingEstimate = 0;
   const grandTotal = cartSubtotal + shippingEstimate;
+  const isCod = paymentMethod === 'cod';
+  const amountToPay = isCod ? codAdvanceAmount : grandTotal;
+  const balanceDue = isCod ? (grandTotal - codAdvanceAmount) : 0;
 
   const getImageUrl = (url) => {
     if (!url) return "";
@@ -413,6 +440,40 @@ export default function Checkout() {
                 </div>
               )}
             </div>
+
+            {/* Payment Method Selection */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                Payment Method
+              </h2>
+              <div className="space-y-4">
+                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === 'online' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 hover:border-brand-300'}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="online"
+                    checked={paymentMethod === 'online'}
+                    onChange={() => setPaymentMethod('online')}
+                    className="h-4 w-4 text-brand-600 border-gray-300 focus:ring-brand-500"
+                  />
+                  <span className="ml-3 font-medium text-gray-900">Online Payment</span>
+                </label>
+                <label className={`flex items-center p-4 border rounded-xl cursor-pointer transition-colors ${paymentMethod === 'cod' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 hover:border-brand-300'}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="cod"
+                    checked={paymentMethod === 'cod'}
+                    onChange={() => setPaymentMethod('cod')}
+                    className="h-4 w-4 text-brand-600 border-gray-300 focus:ring-brand-500"
+                  />
+                  <div className="ml-3">
+                    <span className="block font-medium text-gray-900">Cash on Delivery</span>
+                    <span className="block text-sm text-gray-500 mt-1">Pay ₹{codAdvanceAmount} now as advance, pay balance on delivery.</span>
+                  </div>
+                </label>
+              </div>
+            </div>
           </div>
 
           {/* Right Column: Order Summary */}
@@ -477,10 +538,22 @@ export default function Checkout() {
                 </div>
 
                 <div className="border-t border-gray-200 pt-4 mt-4">
-                  <div className="flex justify-between items-center text-lg font-bold text-gray-900 font-satoshi">
-                    <span>Total</span>
+                  <div className="flex justify-between items-center text-lg font-bold text-gray-900 font-satoshi mb-2">
+                    <span>Grand Total</span>
                     <span>₹{grandTotal.toFixed(2)}</span>
                   </div>
+                  {isCod && (
+                    <>
+                      <div className="flex justify-between items-center text-sm font-medium text-gray-600">
+                        <span>COD Advance to Pay Now</span>
+                        <span>₹{amountToPay.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-medium text-brand-600 mt-1">
+                        <span>Balance Due on Delivery</span>
+                        <span>₹{balanceDue.toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -499,7 +572,7 @@ export default function Checkout() {
                 ) : (
                   <>
                     <FiCheckCircle className="mr-2 h-5 w-5" />
-                    Place Order (₹{grandTotal.toFixed(2)})
+                    Place Order (Pay ₹{amountToPay.toFixed(2)})
                   </>
                 )}
               </button>
