@@ -93,7 +93,7 @@ export default function Home() {
         setLoading(true);
         const [featuredRes, homepageRes] = await Promise.all([
           axios.get(
-            `${import.meta.env.VITE_API_URL}/api/products?filters[featured][$eq]=true&populate[0]=images&populate[1]=category&fields[0]=title&fields[1]=sellingPrice&fields[2]=actualPrice&fields[3]=stock&fields[4]=documentId&fields[5]=bundleOfferEnabled&fields[6]=bundleQty&fields[7]=bundlePrice`
+            `${import.meta.env.VITE_API_URL}/api/products?filters[featured][$eq]=true&sort[0]=createdAt:desc&populate[0]=images&populate[1]=category&fields[0]=title&fields[1]=sellingPrice&fields[2]=actualPrice&fields[3]=stock&fields[4]=documentId&fields[5]=bundleOfferEnabled&fields[6]=bundleQty&fields[7]=bundlePrice`
           ),
           axios.get(
             `${import.meta.env.VITE_API_URL}/api/products?filters[homepageFeatured][$eq]=true&populate[0]=images&fields[0]=title&fields[1]=sellingPrice&fields[2]=description&fields[3]=documentId`
@@ -349,7 +349,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-        <CustomOrderSection />
+      <CustomOrderSection />
     </motion.div>
   );
 }
