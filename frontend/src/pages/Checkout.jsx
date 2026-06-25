@@ -84,7 +84,7 @@ export default function Checkout() {
 
       const isCod = paymentMethod === 'cod';
       const amountToPay = isCod ? codAdvanceAmount : totalAmount;
-      const balanceDue = isCod ? (totalAmount - codAdvanceAmount) : 0;
+      const balanceDue = isCod ? totalAmount : 0;
 
       // 1. Create Razorpay order from backend
       const paymentOrder = await createPaymentOrder(user.id, amountToPay);
@@ -261,11 +261,13 @@ export default function Checkout() {
               userName: user.user_metadata?.full_name || user.email.split('@')[0],
               email: user.email,
               phone: selectedAddr.phone,
-              total: totalAmount,
-              paymentMethod: paymentMethod,
-              codAdvanceAmount: isCod ? codAdvanceAmount : 0,
-              balanceDueOnDelivery: balanceDue,
-              paymentStatus: 'paid',
+              total: isCod ? (totalAmount + codAdvanceAmount) : totalAmount,
+              productTotal: totalAmount,
+              codFee: isCod ? codAdvanceAmount : 0,
+              amountPaidOnline: amountToPay,
+              amountToCollect: balanceDue,
+              paymentMethod: isCod ? 'COD' : paymentMethod,
+              paymentStatus: isCod ? 'COD Fee Paid' : 'paid',
               transactionId: response.razorpay_payment_id,
               orderStatus: 'pending',
               shippingAddress: selectedAddr,
@@ -348,7 +350,8 @@ export default function Checkout() {
   const grandTotal = cartSubtotal + shippingEstimate;
   const isCod = paymentMethod === 'cod';
   const amountToPay = isCod ? codAdvanceAmount : grandTotal;
-  const balanceDue = isCod ? (grandTotal - codAdvanceAmount) : 0;
+  const balanceDue = isCod ? grandTotal : 0;
+  const totalCost = isCod ? (grandTotal + codAdvanceAmount) : grandTotal;
 
   const getImageUrl = (url) => {
     if (!url) return "";
@@ -469,7 +472,7 @@ export default function Checkout() {
                   />
                   <div className="ml-3">
                     <span className="block font-medium text-gray-900">Cash on Delivery</span>
-                    <span className="block text-sm text-gray-500 mt-1">Pay ₹{codAdvanceAmount} now as advance, pay balance on delivery.</span>
+                    <span className="block text-sm text-gray-500 mt-1">Pay ₹{codAdvanceAmount} non-refundable booking fee now, pay full product price on delivery.</span>
                   </div>
                 </label>
               </div>
@@ -538,21 +541,34 @@ export default function Checkout() {
                 </div>
 
                 <div className="border-t border-gray-200 pt-4 mt-4">
-                  <div className="flex justify-between items-center text-lg font-bold text-gray-900 font-satoshi mb-2">
-                    <span>Grand Total</span>
-                    <span>₹{grandTotal.toFixed(2)}</span>
-                  </div>
-                  {isCod && (
+                  {isCod ? (
                     <>
-                      <div className="flex justify-between items-center text-sm font-medium text-gray-600">
-                        <span>COD Advance to Pay Now</span>
+                      <div className="flex justify-between items-center text-sm font-medium text-gray-600 mb-2">
+                        <span>Product Total</span>
+                        <span>₹{grandTotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-medium text-gray-600 mb-2">
+                        <span>COD Booking Fee</span>
+                        <span>₹{codAdvanceAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-medium text-gray-600 mb-2">
+                        <span>Pay Now</span>
                         <span>₹{amountToPay.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between items-center text-sm font-medium text-brand-600 mt-1">
-                        <span>Balance Due on Delivery</span>
+                      <div className="flex justify-between items-center text-sm font-medium text-brand-600 mb-2">
+                        <span>Pay on Delivery</span>
                         <span>₹{balanceDue.toFixed(2)}</span>
                       </div>
+                      <div className="flex justify-between items-center text-lg font-bold text-gray-900 font-satoshi mt-4">
+                        <span>Total Cost</span>
+                        <span>₹{totalCost.toFixed(2)}</span>
+                      </div>
                     </>
+                  ) : (
+                    <div className="flex justify-between items-center text-lg font-bold text-gray-900 font-satoshi mb-2">
+                      <span>Grand Total</span>
+                      <span>₹{grandTotal.toFixed(2)}</span>
+                    </div>
                   )}
                 </div>
               </div>

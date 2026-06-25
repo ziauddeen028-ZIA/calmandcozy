@@ -68,6 +68,7 @@ export default function OrderDetails() {
   const getPaymentStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case "paid":
+      case "cod fee paid":
         return "bg-green-100 text-green-800";
 
       case "pending":
@@ -226,17 +227,17 @@ export default function OrderDetails() {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-500 mb-1">Payment Method</p>
-              <span className="font-medium text-gray-900 uppercase">{order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online'}</span>
+              <span className="font-medium text-gray-900 uppercase">{order.paymentMethod?.toLowerCase() === 'cod' ? 'Cash on Delivery' : 'Online'}</span>
             </div>
-            {order.paymentMethod === 'cod' && (
+            {order.paymentMethod?.toLowerCase() === 'cod' && (
               <>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">COD Advance Paid</p>
-                  <p className="font-medium text-green-600">₹{order.codAdvanceAmount}</p>
+                  <p className="text-sm text-gray-500 mb-1">COD Booking Fee Paid</p>
+                  <p className="font-medium text-green-600">₹{order.codFee || order.codAdvanceAmount}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Balance Due on Delivery</p>
-                  <p className="font-bold text-brand-600">₹{order.balanceDueOnDelivery}</p>
+                  <p className="text-sm text-gray-500 mb-1">Amount to Collect on Delivery</p>
+                  <p className="font-bold text-brand-600">₹{order.amountToCollect || order.balanceDueOnDelivery}</p>
                 </div>
               </>
             )}
