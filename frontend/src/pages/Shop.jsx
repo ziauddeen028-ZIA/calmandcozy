@@ -63,7 +63,7 @@ export default function Shop() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await api.get("/products?populate[0]=images&populate[1]=category&fields[0]=title&fields[1]=sellingPrice&fields[2]=actualPrice&fields[3]=stock&fields[4]=createdAt&fields[5]=theme&fields[6]=documentId");
+        const response = await api.get(  "/products?populate[0]=images&populate[1]=category&fields[0]=title&fields[1]=sellingPrice&fields[2]=actualPrice&fields[3]=stock&fields[4]=createdAt&fields[5]=theme&fields[6]=documentId&fields[7]=bundleOfferEnabled&fields[8]=bundleQty&fields[9]=bundlePrice&fields[10]=customizable");
         const fetchedProducts = response.data.data || [];
         setProducts(fetchedProducts);
 
