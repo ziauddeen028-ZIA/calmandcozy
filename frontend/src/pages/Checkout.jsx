@@ -551,10 +551,7 @@ export default function Checkout() {
                         <span>COD Booking Fee</span>
                         <span>₹{codAdvanceAmount.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between items-center text-sm font-medium text-gray-600 mb-2">
-                        <span>Pay Now</span>
-                        <span>₹{amountToPay.toFixed(2)}</span>
-                      </div>
+
                       <div className="flex justify-between items-center text-sm font-medium text-brand-600 mb-2">
                         <span>Pay on Delivery</span>
                         <span>₹{balanceDue.toFixed(2)}</span>

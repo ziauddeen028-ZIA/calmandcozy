@@ -10,6 +10,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export default function ProductCard({ product }) {
   const { documentId, title, sellingPrice, actualPrice, category, images, customizable, bundleOfferEnabled, bundleQty, bundlePrice } = product;
+  console.log(product);
   const { handleToggleWishlist, isInWishlist } = useWishlist();
   const { addToCart } = useCart();
 
