@@ -27,10 +27,17 @@ const CustomOrderSection = () => {
     }
 
     // Format WhatsApp message
-    const text = `*New Custom Order Enquiry*%0A%0A*Name:* ${formData.name}%0A*Email:* ${formData.email}%0A*Phone:* ${formData.phone}%0A*Category:* ${formData.category}%0A*Quantity:* ${formData.quantity || 'Not specified'}%0A*Message:* ${formData.message || 'None'}`;
+    const messageText = `*New Custom Order Enquiry*
+
+*Name:* ${formData.name}
+*Email:* ${formData.email}
+*Phone:* ${formData.phone}
+*Category:* ${formData.category}
+*Quantity:* ${formData.quantity || 'Not specified'}
+*Message:* ${formData.message || 'None'}`;
     
     // Open WhatsApp
-    window.open(`https://wa.me/918300932172?text=${text}`, '_blank');
+    window.open(`https://wa.me/918300932172?text=${encodeURIComponent(messageText)}`, '_blank');
     
     // Show success toast
     toast.success('Redirecting to WhatsApp...');

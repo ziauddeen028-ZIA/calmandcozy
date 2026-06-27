@@ -853,7 +853,7 @@ export default function ProductDetails() {
           {/* ── Customizable product options ── */}
           {product.customizable && (
             <div className="mb-8 space-y-6 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-              <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2">Customize your {product.customizationType}</h3>
+              <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2">Customize your {product.customizationType || 'Product'}</h3>
 
               {/* Color selector — t-shirt */}
               {product.customizationType === 't-shirt' && product.colorVariants?.length > 0 && (
@@ -927,6 +927,18 @@ export default function ProductDetails() {
                 </div>
               )}
 
+              {/* Custom Text */}
+              <div>
+                <span className="block text-sm font-medium text-gray-700 mb-2">Custom Text (Optional)</span>
+                <input
+                  type="text"
+                  value={customText}
+                  onChange={(e) => setCustomText(e.target.value)}
+                  placeholder="Enter text to print"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-600 focus:ring-0 transition-colors"
+                />
+              </div>
+
               {/* Special Instructions */}
               <div>
                 <span className="block text-sm font-medium text-gray-700 mb-2">Special Instructions</span>
@@ -939,13 +951,13 @@ export default function ProductDetails() {
                 ></textarea>
               </div>
 
-              {/* Mug upload (single image) */}
-              {product.customizationType === 'mug' && (
+              {/* Generic upload (single image) for non-t-shirt customizable products */}
+              {product.customizationType !== 't-shirt' && (
                 <div>
                   <span className="block text-sm font-medium text-gray-700 mb-2">Upload Image</span>
                   <input
                     ref={fileInputRef}
-                    id="mug-upload-input"
+                    id="generic-upload-input"
                     type="file"
                     className="hidden"
                     accept="image/*"
@@ -964,7 +976,7 @@ export default function ProductDetails() {
                     </div>
                   ) : (
                     <label
-                      htmlFor="mug-upload-input"
+                      htmlFor="generic-upload-input"
                       className="flex items-center justify-center gap-3 w-full h-28 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors text-gray-500 font-semibold text-sm"
                     >
                       <FiUpload className="w-5 h-5" />
