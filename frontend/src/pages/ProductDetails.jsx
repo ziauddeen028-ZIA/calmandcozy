@@ -441,6 +441,31 @@ export default function ProductDetails() {
         {/* ── T-shirt dual-preview layout ── */}
         {(product?.customizable && product?.customizationType !== 'mug') ? (
           <div className="flex flex-col gap-6">
+            {/* Color Selector Strip */}
+            {product.colorVariants?.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 flex items-center gap-4">
+                <span className="text-sm font-semibold text-gray-700 shrink-0">Color:</span>
+                <div className="flex gap-2 flex-wrap">
+                  {product.colorVariants.map(variant => (
+                    <button
+                      key={variant.colorName}
+                      onClick={() => handleColorChange(variant.colorName)}
+                      title={variant.colorName}
+                      className={`w-9 h-9 rounded-full border-2 transition-all ${
+                        selectedColor === variant.colorName
+                          ? 'border-indigo-600 ring-2 ring-indigo-600 ring-offset-2 scale-110'
+                          : 'border-gray-300 hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: variant.colorName.toLowerCase() }}
+                    />
+                  ))}
+                </div>
+                {selectedColor && (
+                  <span className="text-sm text-gray-500 capitalize ml-1">{selectedColor}</span>
+                )}
+              </div>
+            )}
+
             {/* Front Design Card */}
             <div className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-white">
               <div className="px-5 pt-4 pb-2">
