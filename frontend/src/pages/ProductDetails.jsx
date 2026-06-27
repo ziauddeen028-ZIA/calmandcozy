@@ -677,10 +677,10 @@ export default function ProductDetails() {
                 <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
               )}
 
-              {/* Live Preview Overlay — mug only */}
-              {product.customizable && product.customizationType === 'mug' && (
+              {/* Live Preview Overlay */}
+              {product.customizable && product.customizationType !== 't-shirt' && (
                 <div className="absolute flex flex-col items-center justify-center pointer-events-none"
-                  style={{ top: '15%', left: '12%', width: '65%', height: '70%' }}>
+                  style={{ top: '25%', left: '25%', width: '50%', height: '50%' }}>
                   {uploadedImagePreview && (
                     <img
                       src={uploadedImagePreview}
