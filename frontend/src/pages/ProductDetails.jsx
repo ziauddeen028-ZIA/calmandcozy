@@ -265,8 +265,10 @@ export default function ProductDetails() {
       // ── Customizable product ──
       if (product.stock <= 0) return;
 
+      const isTshirtCustomization = product.customizable && product.customizationType !== 'mug';
+
       if (product.customizable) {
-        if (product.customizationType === 't-shirt') {
+        if (isTshirtCustomization) {
           if (!selectedColor && product.colorVariants?.length > 0) return toast.error('Please select a color');
           if (!selectedSize && product.availableSizes?.length > 0) return toast.error('Please select a size');
           if (!uploadedImageFile) {
@@ -437,7 +439,7 @@ export default function ProductDetails() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
         {/* ── T-shirt dual-preview layout ── */}
-        {product.customizable && product.customizationType === 't-shirt' ? (
+        {(product?.customizable && product?.customizationType !== 'mug') ? (
           <div className="flex flex-col gap-6">
             {/* Front Design Card */}
             <div className="rounded-2xl border border-gray-100 shadow-sm overflow-hidden bg-white">
@@ -678,7 +680,7 @@ export default function ProductDetails() {
               )}
 
               {/* Live Preview Overlay */}
-              {product.customizable && product.customizationType !== 't-shirt' && (
+              {product.customizable && product.customizationType === 'mug' && (
                 <div className="absolute flex flex-col items-center justify-center pointer-events-none"
                   style={{ top: '25%', left: '25%', width: '50%', height: '50%' }}>
                   {uploadedImagePreview && (
@@ -856,7 +858,7 @@ export default function ProductDetails() {
               <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-2">Customize your {product.customizationType || 'Product'}</h3>
 
               {/* Color selector — t-shirt */}
-              {product.customizationType === 't-shirt' && product.colorVariants?.length > 0 && (
+              {(product.customizationType !== 'mug') && product.colorVariants?.length > 0 && (
                 <div>
                   <span className="block text-sm font-medium text-gray-700 mb-2">Color</span>
                   <div className="flex gap-2">
@@ -892,7 +894,7 @@ export default function ProductDetails() {
               )}
 
               {/* Size selector — t-shirt */}
-              {product.customizationType === 't-shirt' && product.availableSizes?.length > 0 && (
+              {(product.customizationType !== 'mug') && product.availableSizes?.length > 0 && (
                 <div>
                   <span className="block text-sm font-medium text-gray-700 mb-2">Size</span>
                   <div className="flex gap-2 flex-wrap">
@@ -910,7 +912,7 @@ export default function ProductDetails() {
               )}
 
               {/* Logo Position — t-shirt */}
-              {product.customizationType === 't-shirt' && (
+              {(product.customizationType !== 'mug') && (
                 <div>
                   <span className="block text-sm font-medium text-gray-700 mb-2">Logo Position</span>
                   <div className="flex gap-2 flex-wrap">
@@ -952,7 +954,7 @@ export default function ProductDetails() {
               </div>
 
               {/* Generic upload (single image) for non-t-shirt customizable products */}
-              {product.customizationType !== 't-shirt' && (
+              {product.customizationType === 'mug' && false && (
                 <div>
                   <span className="block text-sm font-medium text-gray-700 mb-2">Upload Image</span>
                   <input
